@@ -126,12 +126,32 @@ ubicaciones de prueba y se ve lo que entendió la IA y a qué maestros se avisó
 3. Solo los **5 primeros** entran. El pedido se bloquea en la base mientras se cotiza, así dos maestros
    no pueden tomar el último cupo a la vez; quien llega tarde no pierde créditos.
 4. El cliente recibe un aviso por cada cotización con el enlace `/pedidos/CODIGO`, donde las ve
-   ordenadas (calificación 30%, precio justo 25%, rapidez 20%, cercanía 15%, experiencia 10%) y elige.
+   ordenadas (calificación y confianza 30%, precio justo 25%, rapidez 20%, cercanía 15%, experiencia 10%) y elige.
 5. Al elegir: el maestro elegido recibe el contacto del cliente y viceversa; a los demás se les avisa.
    Los celulares solo se revelan después de elegir.
 
 **Panel del maestro** (`/panel`), por pestañas: *Trabajos*, *Mis cotizaciones* (enviadas, elegidas,
 en espera, valor ganado y filtros), *Créditos* (saldo, paquetes y movimientos) y *Mi zona y cuenta*.
+
+## Calificaciones y confianza
+
+Cuando el maestro elegido termina, el cliente lo califica en `/pedidos/CODIGO` (el enlace llega por
+WhatsApp al elegir). Califica de 1 a 5 estrellas cuatro aspectos, con la **confianza** primero:
+
+| Aspecto | Qué mide |
+|---|---|
+| **Confianza** | Honestidad, respeto por la casa, sensación de seguridad |
+| Calidad del trabajo | Quedó bien hecho y bien terminado |
+| Puntualidad | Llegó a tiempo y terminó cuando dijo |
+| Cumplimiento | Respetó el precio y lo acordado |
+
+- La calificación general es el promedio de los cuatro. El perfil guarda aparte el promedio de confianza.
+- En cada cotización el cliente ve "★ 4.8 · 🛡 Confianza 4.9" y puede ordenar por *Más confiable*.
+- En el orden recomendado, la confianza pesa la mitad del 30% de calificación.
+- Con 3 o más calificaciones y confianza menor a 3, se muestra **"Confianza baja según otros clientes"**
+  en sus cotizaciones y una alerta en el panel administrativo.
+- Al calificar, el pedido pasa a *Terminado*, sube el contador de trabajos del maestro y se le avisa.
+- El maestro ve todo en la pestaña **Calificaciones** de su panel.
 
 ## Panel administrativo (solo superadmin)
 
@@ -178,6 +198,7 @@ Las migraciones están en `apps/api/src/database/migrations`:
 | `ConfiguracionIa` | Rol `superadmin`, tablas `configuraciones_ia` y `registros_ia` |
 | `Ciudades` | Tablas `ciudades` y `conversaciones`; ciudad en barrios, usuarios y solicitudes |
 | `DatosCiudades` | 8 ciudades (Bogotá y Cartagena activas) |
+| `CalificacionConfianza` | Calificación por aspectos (confianza, calidad, puntualidad, cumplimiento) y promedio de confianza |
 
 ```bash
 npm run migration:run       # aplica las pendientes
@@ -223,6 +244,8 @@ Reglas del esquema:
 | GET | `/maestros/yo/cotizaciones?estado=` | maestro | Historial con resumen |
 | GET | `/pedidos` · `/pedidos/:codigo` | con token | Pedidos del usuario y cotizaciones ordenadas |
 | POST | `/pedidos/:codigo/elegir` | con token | Elegir maestro |
+| POST | `/pedidos/:codigo/calificar` | con token | Calificar al maestro (4 aspectos) y terminar el pedido |
+| GET | `/maestros/yo/calificaciones` | maestro | Promedios por aspecto y comentarios |
 | GET | `/admin/resumen?dias=30` | superadmin | Cifras del tablero |
 | GET | `/admin/maestros` · `/admin/pedidos` | superadmin | Listados con filtros |
 | PATCH | `/admin/maestros/:id/verificacion` | superadmin | Verificar o rechazar |
@@ -238,7 +261,7 @@ El token va en el encabezado `Authorization: Bearer <token>`.
 - **Barrios:** importar los barrios de Bogotá y Cartagena (ver "Ciudades y barrios").
 - **WhatsApp real:** conectar el webhook de Meta a `ConversacionService`. Los avisos (`MensajeriaService`)
   ya se envían si WhatsApp está configurado, pero fuera de la ventana de 24 horas Meta exige plantillas aprobadas.
-- **Reseñas:** que el cliente marque el trabajo como terminado y califique al maestro.
+- **Recordatorio de calificación:** escribirle al cliente unos días después de elegir si aún no ha calificado.
 - **Política de datos:** `/privacidad` es un borrador; el texto final debe revisarlo un abogado.
 - **Precios de referencia:** las columnas `precioRefMin` y `precioRefMax` de `areas` están vacías
   hasta tener datos reales.

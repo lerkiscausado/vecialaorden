@@ -12,6 +12,7 @@ import {
   Cotizacion,
   NotificacionSolicitud,
   PerfilMaestro,
+  Resena,
   Solicitud,
   Usuario,
 } from '../database/entities';
@@ -181,6 +182,10 @@ export class CotizacionesService {
       order: { creadoEn: 'DESC' },
       take: 200,
     });
+    const resenas = lista.length
+      ? await this.dataSource.getRepository(Resena).find({ where: { maestroId, solicitudId: In(lista.map((c) => c.solicitudId)) } })
+      : [];
+    const resenaPor = new Map(resenas.map((r) => [r.solicitudId, r]));
 
     const totales = await repo
       .createQueryBuilder('c')
@@ -225,6 +230,10 @@ export class CotizacionesService {
           c.estado === EstadoCotizacion.ELEGIDA
             ? { nombre: c.solicitud.cliente.nombre, celular: c.solicitud.cliente.celular }
             : null,
+        calificacion: (() => {
+          const r = c.estado === EstadoCotizacion.ELEGIDA ? resenaPor.get(c.solicitudId) : undefined;
+          return r ? { general: r.calificacion, confianza: r.confianza, comentario: r.comentario } : null;
+        })(),
       })),
     };
   }
@@ -273,6 +282,7 @@ export class CotizacionesService {
         minutosRespuesta: minutosEntre(s.publicadaEn, c.creadoEn),
         distanciaKm: distancia.get(c.maestroId) ?? null,
         calificacion: c.maestro.perfilMaestro?.calificacionPromedio ?? 0,
+        confianza: c.maestro.perfilMaestro?.confianzaPromedio ?? 0,
         totalResenas: c.maestro.perfilMaestro?.totalResenas ?? 0,
         trabajosCompletados: c.maestro.perfilMaestro?.trabajosCompletados ?? 0,
         aniosExperiencia: c.maestro.perfilMaestro?.aniosExperiencia ?? 0,
@@ -280,10 +290,23 @@ export class CotizacionesService {
       referencia,
     );
 
+    const resena = await this.dataSource.getRepository(Resena).findOne({ where: { solicitudId: s.id } });
+
     return {
       codigo: s.codigo,
       resumen: s.resumen ?? s.descripcion.slice(0, 200),
       descripcion: s.descripcion,
+      puedeCalificar: s.estado === EstadoSolicitud.ASIGNADA && !resena,
+      miCalificacion: resena
+        ? {
+            calificacion: resena.calificacion,
+            confianza: resena.confianza,
+            calidad: resena.calidad,
+            puntualidad: resena.puntualidad,
+            cumplimiento: resena.cumplimiento,
+            comentario: resena.comentario,
+          }
+        : null,
       areas: (s.areas ?? []).map((a) => a.nombre),
       ubicacion: ubicacionTexto(s),
       estado: s.estado,
@@ -300,6 +323,7 @@ export class CotizacionesService {
           posicion: i + 1,
           puntaje: r.puntaje,
           etiquetaPrecio: r.etiquetaPrecio as EtiquetaPrecio,
+          confianzaBaja: r.confianzaBaja,
           precioTotal: c.precioTotal,
           manoDeObra: c.manoDeObra,
           materiales: c.materiales,
@@ -313,6 +337,7 @@ export class CotizacionesService {
             nombre: c.maestro.nombre,
             verificado: p?.verificacion === EstadoVerificacion.VERIFICADO,
             calificacion: p?.calificacionPromedio ?? 0,
+            confianza: p?.confianzaPromedio ?? 0,
             totalResenas: p?.totalResenas ?? 0,
             trabajosCompletados: p?.trabajosCompletados ?? 0,
             aniosExperiencia: p?.aniosExperiencia ?? 0,
@@ -371,7 +396,8 @@ export class CotizacionesService {
     }
     await this.mensajeria.enviarTexto(
       cliente.celular,
-      `✅ Elegiste a *${elegida.maestro.nombre}* para tu pedido *#${s.codigo}*.\n📞 ${elegida.maestro.celular}\n\nYa le avisamos y te escribirá para coordinar. ¡Gracias por usar Veci a la Orden!`,
+      `✅ Elegiste a *${elegida.maestro.nombre}* para tu pedido *#${s.codigo}*.\n📞 ${elegida.maestro.celular}\n\nYa le avisamos y te escribirá para coordinar.\n\n` +
+        `Cuando termine el trabajo, califícalo aquí (confianza, calidad, puntualidad y cumplimiento): ${this.mensajeria.urlWeb(`/pedidos/${s.codigo}`)}`,
       s.id,
     );
     return this.detallePedido(clienteId, codigo);

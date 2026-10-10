@@ -19,7 +19,9 @@ interface Maestro {
   radioKm: number;
   aniosExperiencia: number;
   calificacion: number;
+  confianza: number;
   totalResenas: number;
+  confianzaBaja: boolean;
   cotizaciones: number;
   elegidas: number;
   creadoEn: string;
@@ -106,6 +108,7 @@ export function MaestrosAdmin({ ciudades }: { ciudades: Ciudad[] }) {
                 <strong>{m.nombre}</strong>
                 <div className="chips">
                   <span className={`pastilla pastilla-verif-${m.verificacion}`}>{VERIF[m.verificacion]}</span>
+                  {m.confianzaBaja && <span className="pastilla pastilla-alerta">Confianza baja</span>}
                   {m.estado === 'suspendido' && <span className="pastilla pastilla-alerta">Suspendido</span>}
                 </div>
               </div>
@@ -122,6 +125,17 @@ export function MaestrosAdmin({ ciudades }: { ciudades: Ciudad[] }) {
                 <span>{m.aniosExperiencia} años</span>
                 <span>
                   {m.cotizaciones} cotizaciones · {m.elegidas} elegidas
+                </span>
+                <span>
+                  {m.totalResenas ? (
+                    <>
+                      ★ {m.calificacion.toFixed(1)} ·{' '}
+                      <span className={m.confianzaBaja ? 'confianza confianza-baja' : 'confianza'}>Confianza {m.confianza.toFixed(1)}</span>{' '}
+                      ({m.totalResenas})
+                    </>
+                  ) : (
+                    'Sin calificaciones'
+                  )}
                 </span>
                 <span>
                   <strong>{m.saldoCreditos}</strong> créditos

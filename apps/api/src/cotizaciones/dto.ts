@@ -48,3 +48,39 @@ export class ElegirDto {
   @Type(() => Number)
   cotizacionId: number;
 }
+
+const ESTRELLAS = (aspecto: string) => `Califica ${aspecto} de 1 a 5 estrellas.`;
+
+export class CalificarDto {
+  /** Honestidad, respeto por la casa, sensación de seguridad. */
+  @Max(5, { message: ESTRELLAS('la confianza') })
+  @Min(1, { message: ESTRELLAS('la confianza') })
+  @IsInt({ message: ESTRELLAS('la confianza') })
+  @Type(() => Number)
+  confianza: number;
+
+  @Max(5, { message: ESTRELLAS('la calidad del trabajo') })
+  @Min(1, { message: ESTRELLAS('la calidad del trabajo') })
+  @IsInt({ message: ESTRELLAS('la calidad del trabajo') })
+  @Type(() => Number)
+  calidad: number;
+
+  @Max(5, { message: ESTRELLAS('la puntualidad') })
+  @Min(1, { message: ESTRELLAS('la puntualidad') })
+  @IsInt({ message: ESTRELLAS('la puntualidad') })
+  @Type(() => Number)
+  puntualidad: number;
+
+  /** Respetó el precio y lo acordado. */
+  @Max(5, { message: ESTRELLAS('el cumplimiento') })
+  @Min(1, { message: ESTRELLAS('el cumplimiento') })
+  @IsInt({ message: ESTRELLAS('el cumplimiento') })
+  @Type(() => Number)
+  cumplimiento: number;
+
+  @IsOptional()
+  @Transform(recortar)
+  @MaxLength(1000, { message: 'El comentario puede tener máximo 1.000 caracteres.' })
+  @IsString()
+  comentario?: string;
+}

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { FormularioCalificacion, MiCalificacion, ResumenCalificacion } from '@/components/cliente/FormularioCalificacion';
 import { Encabezado, Pie } from '@/components/Encabezado';
 import { api, borrarToken, ErrorApi, leerToken } from '@/lib/api';
 import { ESTADO_PEDIDO, minutos, pesos } from '@/lib/formato';
@@ -21,10 +22,12 @@ interface Cotizacion {
   minutosRespuesta: number;
   distanciaKm: number | null;
   estado: string;
+  confianzaBaja: boolean;
   maestro: {
     nombre: string;
     verificado: boolean;
     calificacion: number;
+    confianza: number;
     totalResenas: number;
     trabajosCompletados: number;
     aniosExperiencia: number;
@@ -41,16 +44,19 @@ interface Pedido {
   cuposUsados: number;
   cuposMax: number;
   puedeElegir: boolean;
+  puedeCalificar: boolean;
+  miCalificacion: MiCalificacion | null;
   cotizaciones: Cotizacion[];
 }
 
-type Orden = 'recomendado' | 'precio' | 'cercania' | 'calificacion' | 'rapidez';
+type Orden = 'recomendado' | 'precio' | 'cercania' | 'calificacion' | 'confianza' | 'rapidez';
 
 const ORDENES: { id: Orden; nombre: string; fn: (a: Cotizacion, b: Cotizacion) => number }[] = [
   { id: 'recomendado', nombre: 'Recomendado', fn: (a, b) => a.posicion - b.posicion },
   { id: 'precio', nombre: 'Más barato', fn: (a, b) => a.precioTotal - b.precioTotal },
   { id: 'cercania', nombre: 'Más cercano', fn: (a, b) => (a.distanciaKm ?? 999) - (b.distanciaKm ?? 999) },
   { id: 'calificacion', nombre: 'Mejor calificado', fn: (a, b) => b.maestro.calificacion - a.maestro.calificacion },
+  { id: 'confianza', nombre: 'Más confiable', fn: (a, b) => b.maestro.confianza - a.maestro.confianza },
   { id: 'rapidez', nombre: 'Respondió primero', fn: (a, b) => a.minutosRespuesta - b.minutosRespuesta },
 ];
 
@@ -135,12 +141,17 @@ export default function PaginaPedido() {
 
               {elegida && (
                 <section className="tarjeta ancha elegido">
-                  <h2 style={{ fontSize: 22 }}>Elegiste a {elegida.maestro.nombre}</h2>
-                  <p style={{ margin: 0 }}>
-                    Ya le avisamos y te escribirá para coordinar. Si quieres, escríbele tú:{' '}
-                    <strong>{elegida.maestro.celular}</strong>
-                  </p>
-                  {elegida.maestro.celular && (
+                  <h2 style={{ fontSize: 22 }}>
+                    {pedido.miCalificacion ? `Trabajo terminado con ${elegida.maestro.nombre}` : `Elegiste a ${elegida.maestro.nombre}`}
+                  </h2>
+                  {!pedido.miCalificacion && (
+                    <p style={{ margin: 0 }}>
+                      Ya le avisamos y te escribirá para coordinar. Si quieres, escríbele tú:{' '}
+                      <strong>{elegida.maestro.celular}</strong>. Cuando termine, califícalo aquí abajo.
+                    </p>
+                  )}
+                  {pedido.miCalificacion && <ResumenCalificacion c={pedido.miCalificacion} />}
+                  {elegida.maestro.celular && !pedido.miCalificacion && (
                     <div className="acciones">
                       <a
                         className="boton boton-whatsapp"
@@ -152,6 +163,12 @@ export default function PaginaPedido() {
                       </a>
                     </div>
                   )}
+                </section>
+              )}
+
+              {elegida && pedido.puedeCalificar && (
+                <section className="tarjeta ancha">
+                  <FormularioCalificacion<Pedido> codigo={pedido.codigo} maestro={elegida.maestro.nombre} onListo={setPedido} />
                 </section>
               )}
 
@@ -181,11 +198,25 @@ export default function PaginaPedido() {
                                 {c.maestro.verificado && <span className="verificado"> ✓ Verificado</span>}
                               </strong>
                               <div className="historial-datos">
-                                <span>
-                                  {c.maestro.totalResenas ? `★ ${c.maestro.calificacion.toFixed(1)} (${c.maestro.totalResenas})` : 'Nuevo en Veci'}
-                                </span>
+                                {c.maestro.totalResenas ? (
+                                  <>
+                                    <span>
+                                      ★ {c.maestro.calificacion.toFixed(1)} ({c.maestro.totalResenas}{' '}
+                                      {c.maestro.totalResenas === 1 ? 'calificación' : 'calificaciones'})
+                                    </span>
+                                    <span className={c.confianzaBaja ? 'confianza confianza-baja' : 'confianza'}>
+                                      Confianza {c.maestro.confianza.toFixed(1)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span>Nuevo en Veci · sin calificaciones</span>
+                                )}
                                 <span>{c.maestro.aniosExperiencia} años de experiencia</span>
-                                {c.maestro.trabajosCompletados > 0 && <span>{c.maestro.trabajosCompletados} trabajos</span>}
+                                {c.maestro.trabajosCompletados > 0 && (
+                                  <span>
+                                    {c.maestro.trabajosCompletados} {c.maestro.trabajosCompletados === 1 ? 'trabajo terminado' : 'trabajos terminados'} en Veci
+                                  </span>
+                                )}
                                 {c.distanciaKm !== null && <span>a {c.distanciaKm} km</span>}
                                 <span>respondió en {minutos(c.minutosRespuesta)}</span>
                               </div>
@@ -200,6 +231,9 @@ export default function PaginaPedido() {
                           </div>
                           <div className="chips">
                             {c.posicion === 1 && <span className="pastilla pastilla-recomendada">Recomendada</span>}
+                            {c.confianzaBaja && (
+                              <span className="pastilla pastilla-alerta">Confianza baja según otros clientes</span>
+                            )}
                             {precio && <span className={`pastilla ${precio.clase}`}>{precio.texto}</span>}
                             {c.fechaDisponible && <span className="chip">Puede empezar el {c.fechaDisponible}</span>}
                             {c.duracionDias && <span className="chip">{c.duracionDias} días de trabajo</span>}
@@ -237,8 +271,8 @@ export default function PaginaPedido() {
                     })}
                   </ul>
                   <p className="sub">
-                    El orden recomendado combina calificación (30%), precio justo (25%), rapidez (20%), cercanía (15%) y
-                    experiencia (10%).
+                    El orden recomendado combina calificación y confianza (30%), precio justo (25%), rapidez (20%), cercanía
+                    (15%) y experiencia (10%).
                   </p>
                 </>
               )}
