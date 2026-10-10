@@ -42,6 +42,8 @@ export interface PerfilPublico {
     verificacion: string;
     saldoCreditos: number;
     calificacionPromedio: number;
+    confianzaPromedio: number;
+    totalResenas: number;
     radioKm: number;
     recibeAvisos: boolean;
     areas: { slug: string; nombre: string }[];
@@ -207,6 +209,8 @@ export class AuthService {
             verificacion: m.verificacion,
             saldoCreditos: m.saldoCreditos,
             calificacionPromedio: m.calificacionPromedio,
+            confianzaPromedio: m.confianzaPromedio,
+            totalResenas: m.totalResenas,
             radioKm: m.radioKm,
             recibeAvisos: m.recibeAvisos,
             areas: (m.areas ?? []).map((a) => ({ slug: a.slug, nombre: a.nombre })),

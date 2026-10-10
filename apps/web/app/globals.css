@@ -260,3 +260,29 @@ form { display: flex; flex-direction: column; gap: 14px; }
 .grafico-barra.activa { fill: var(--verde-oscuro); }
 .grafico-tooltip { position: absolute; top: 0; transform: translateX(-50%); background: var(--tinta); color: #fff; border-radius: 8px; padding: 5px 9px; font-size: 12.5px; pointer-events: none; display: flex; flex-direction: column; white-space: nowrap; }
 .grafico-tabla summary { cursor: pointer; font-size: 13px; color: var(--verde); font-weight: 600; }
+
+/* ── Calificaciones y confianza ── */
+.estrellas { color: #e0a100; letter-spacing: 1px; line-height: 1; white-space: nowrap; }
+.estrellas-vacias { color: #d5dcd5; }
+.confianza { font-weight: 700; color: var(--verde); }
+.confianza::before { content: '🛡 '; font-weight: 400; }
+.confianza-baja { color: var(--error); }
+.cifra-confianza { border-color: var(--verde); background: #f3faf6; }
+.cifra-confianza strong { color: var(--verde); }
+.form-calificacion { display: grid; gap: 16px; }
+.selector-estrellas { border: 1px solid #d5dcd5; border-radius: 12px; padding: 12px 14px; margin: 0; display: grid; gap: 6px; }
+.selector-estrellas.destacado { border: 2px solid var(--verde); background: #f3faf6; }
+.selector-estrellas legend { display: flex; flex-direction: column; padding: 0 4px; }
+.selector-estrellas legend span { font-size: 13.5px; color: var(--gris); font-weight: 400; }
+.fila-estrellas { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.estrella { cursor: pointer; font-size: 34px; line-height: 1; color: #d5dcd5; padding: 2px 3px; min-width: 44px; min-height: 44px; display: grid; place-items: center; position: relative; }
+.estrella.activa { color: #e0a100; }
+.estrella input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.estrella:has(input:focus-visible) { outline: 3px solid var(--amarillo); outline-offset: 2px; border-radius: 8px; }
+.palabra-estrellas { font-weight: 700; color: var(--gris); margin-left: 8px; min-width: 7ch; }
+.aspectos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 8px; margin: 0; }
+.aspecto { background: var(--hundido); border-radius: 10px; padding: 8px 12px; }
+.aspecto.destacado { background: #e6f4ec; }
+.aspecto dt { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--gris); }
+.aspecto dd { margin: 2px 0 0; font-weight: 700; }
+.resumen-calificacion { display: grid; gap: 10px; }

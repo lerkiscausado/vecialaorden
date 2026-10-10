@@ -12,6 +12,7 @@ import {
   RolUsuario,
   TipoMovimientoCredito,
 } from '../database/enums';
+import { confianzaBaja, MINIMO_RESENAS_ALERTA, UMBRAL_CONFIANZA_BAJA } from '../cotizaciones/ranking';
 import { AjusteCreditosDto, FiltroMaestrosDto, FiltroPedidosDto } from './dto';
 
 const n = (v: unknown) => Number(v ?? 0);
@@ -48,7 +49,8 @@ export class AdminService {
          SUM(pm.verificacion = 'verificado') AS verificados,
          SUM(pm.verificacion = 'pendiente') AS pendientes,
          SUM(u.latitud IS NULL OR u.ubicacionAproximada = 1) AS sinUbicacionExacta,
-         SUM(pm.saldoCreditos <= 0) AS sinCreditos
+         SUM(pm.saldoCreditos <= 0) AS sinCreditos,
+         SUM(pm.totalResenas >= ${MINIMO_RESENAS_ALERTA} AND pm.confianzaPromedio > 0 AND pm.confianzaPromedio < ${UMBRAL_CONFIANZA_BAJA}) AS confianzaBaja
        FROM perfiles_maestro pm JOIN usuarios u ON u.id = pm.usuarioId
        WHERE u.estado = 'activo'`,
     );
@@ -84,6 +86,11 @@ export class AdminService {
     const [saldo] = await this.q(`SELECT COALESCE(SUM(saldoCreditos), 0) AS total FROM perfiles_maestro`);
     const [pagos] = await this.q(
       `SELECT COUNT(*) AS cantidad, COALESCE(SUM(monto), 0) AS total FROM pagos WHERE estado = 'aprobado' AND creadoEn >= ?`,
+      [desde],
+    );
+    const [resenas] = await this.q(
+      `SELECT COUNT(*) AS total, AVG(calificacion) AS general, AVG(confianza) AS confianza
+         FROM resenas WHERE creadoEn >= ?`,
       [desde],
     );
     const [ia] = await this.q(
@@ -137,6 +144,7 @@ export class AdminService {
         pendientesVerificacion: n(maestros?.pendientes),
         sinUbicacionExacta: n(maestros?.sinUbicacionExacta),
         sinCreditos: n(maestros?.sinCreditos),
+        confianzaBaja: n(maestros?.confianzaBaja),
       },
       pedidos: {
         publicados: publicadasN,
@@ -159,6 +167,11 @@ export class AdminService {
       },
       ingresos: { pagos: n(pagos?.cantidad), total: n(pagos?.total) },
       ia: { llamadas: n(ia?.llamadas), errores: n(ia?.errores) },
+      calificaciones: {
+        total: n(resenas?.total),
+        general: n(resenas?.total) ? Math.round(n(resenas?.general) * 100) / 100 : null,
+        confianza: n(resenas?.total) ? Math.round(n(resenas?.confianza) * 100) / 100 : null,
+      },
       porCiudad: porCiudad.map((c) => ({ id: n(c.id), nombre: c.nombre, maestros: n(c.maestros), pedidos: n(c.pedidos) })),
       serie,
     };
@@ -184,7 +197,7 @@ export class AdminService {
       `SELECT u.id, u.nombre, u.celular, u.correo, u.estado, u.creadoEn, u.ubicacionAproximada,
               c.nombre AS ciudad, COALESCE(b.nombre, u.barrioTexto) AS barrio,
               pm.verificacion, pm.saldoCreditos, pm.radioKm, pm.recibeAvisos, pm.aniosExperiencia,
-              pm.calificacionPromedio, pm.totalResenas,
+              pm.calificacionPromedio, pm.confianzaPromedio, pm.totalResenas,
               (SELECT GROUP_CONCAT(a.nombre ORDER BY a.id SEPARATOR ', ')
                  FROM maestro_areas ma JOIN areas a ON a.id = ma.areaId WHERE ma.maestroId = u.id) AS oficios,
               (SELECT COUNT(*) FROM cotizaciones co WHERE co.maestroId = u.id) AS cotizaciones,
@@ -194,7 +207,8 @@ export class AdminService {
          LEFT JOIN ciudades c ON c.id = u.ciudadId
          LEFT JOIN barrios b ON b.id = u.barrioId
         ${condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : ''}
-        ORDER BY (pm.verificacion = 'pendiente') DESC, u.creadoEn DESC
+        ORDER BY (pm.totalResenas >= ${MINIMO_RESENAS_ALERTA} AND pm.confianzaPromedio > 0 AND pm.confianzaPromedio < ${UMBRAL_CONFIANZA_BAJA}) DESC,
+                 (pm.verificacion = 'pendiente') DESC, u.creadoEn DESC
         LIMIT 200`,
       params,
     );
@@ -214,7 +228,9 @@ export class AdminService {
       recibeAvisos: Boolean(r.recibeAvisos),
       aniosExperiencia: n(r.aniosExperiencia),
       calificacion: n(r.calificacionPromedio),
+      confianza: n(r.confianzaPromedio),
       totalResenas: n(r.totalResenas),
+      confianzaBaja: confianzaBaja(n(r.confianzaPromedio), n(r.totalResenas)),
       cotizaciones: n(r.cotizaciones),
       elegidas: n(r.elegidas),
       creadoEn: r.creadoEn,

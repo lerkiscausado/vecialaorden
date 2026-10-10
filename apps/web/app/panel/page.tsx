@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { MisPedidos } from '@/components/cliente/MisPedidos';
 import { Encabezado, Pie } from '@/components/Encabezado';
+import { MisCalificaciones } from '@/components/maestro/MisCalificaciones';
 import { MisCotizaciones } from '@/components/maestro/MisCotizaciones';
 import { MisCreditos } from '@/components/maestro/MisCreditos';
 import { TrabajosDisponibles } from '@/components/maestro/TrabajosDisponibles';
 import { ZonaTrabajo } from '@/components/ZonaTrabajo';
 import { api, borrarToken, ErrorApi, leerToken, Usuario } from '@/lib/api';
 
-type Pestana = 'trabajos' | 'cotizaciones' | 'creditos' | 'cuenta' | 'pedidos';
+type Pestana = 'trabajos' | 'cotizaciones' | 'calificaciones' | 'creditos' | 'cuenta' | 'pedidos';
 
 const VERIFICACION: Record<string, string> = {
   pendiente: 'Documentos pendientes de revisión',
@@ -56,7 +57,9 @@ export default function Panel() {
       } catch {
         /* sin almacenamiento */
       }
-      const validas: Pestana[] = u.maestro ? ['trabajos', 'cotizaciones', 'creditos', 'cuenta'] : ['pedidos', 'cuenta'];
+      const validas: Pestana[] = u.maestro
+        ? ['trabajos', 'cotizaciones', 'calificaciones', 'creditos', 'cuenta', 'pedidos']
+        : ['pedidos', 'cuenta'];
       setPestana(validas.includes(guardada as Pestana) ? (guardada as Pestana) : validas[0]);
     });
   }, [router, cargar]);
@@ -80,6 +83,7 @@ export default function Panel() {
     ? [
         { id: 'trabajos', nombre: 'Trabajos' },
         { id: 'cotizaciones', nombre: 'Mis cotizaciones' },
+        { id: 'calificaciones', nombre: 'Calificaciones' },
         { id: 'creditos', nombre: `Créditos (${m.saldoCreditos})` },
         { id: 'cuenta', nombre: 'Mi zona y cuenta' },
       ]
@@ -104,6 +108,11 @@ export default function Panel() {
                   {m && (
                     <p className="sub">
                       {VERIFICACION[m.verificacion] ?? m.verificacion} · {m.saldoCreditos} créditos
+                      {m.totalResenas > 0 && (
+                        <>
+                          {' · '}★ {m.calificacionPromedio.toFixed(1)} · <span className="confianza">Confianza {m.confianzaPromedio.toFixed(1)}</span>
+                        </>
+                      )}
                     </p>
                   )}
                 </div>
@@ -140,6 +149,7 @@ export default function Panel() {
               <section role="tabpanel" id={`panel-${pestana}`} aria-labelledby={`tab-${pestana}`} className="pestana-contenido">
                 {pestana === 'trabajos' && m && <TrabajosDisponibles saldo={m.saldoCreditos} onCotizado={cargar} />}
                 {pestana === 'cotizaciones' && <MisCotizaciones />}
+                {pestana === 'calificaciones' && <MisCalificaciones />}
                 {pestana === 'creditos' && m && <MisCreditos saldo={m.saldoCreditos} />}
                 {pestana === 'pedidos' && <MisPedidos />}
                 {pestana === 'cuenta' && (

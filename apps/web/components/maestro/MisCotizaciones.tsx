@@ -26,6 +26,7 @@ interface Historial {
     estado: string;
     enviadaEn: string;
     cliente: { nombre: string; celular: string } | null;
+    calificacion: { general: number; confianza: number; comentario: string | null } | null;
   }[];
 }
 
@@ -106,7 +107,14 @@ export function MisCotizaciones() {
                 <strong>{pesos(c.precioTotal)}</strong>
                 <span className="sub">−{c.creditosCobrados} créditos</span>
               </div>
-              {c.cliente && (
+              {c.calificacion && (
+                <p className="aviso aviso-info">
+                  Te calificaron <strong>★ {c.calificacion.general.toFixed(1)}</strong> ·{' '}
+                  <span className="confianza">Confianza {c.calificacion.confianza}</span>
+                  {c.calificacion.comentario ? ` — “${c.calificacion.comentario}”` : ''}
+                </p>
+              )}
+              {c.cliente && !c.calificacion && (
                 <p className="aviso aviso-exito">
                   Cliente: <strong>{c.cliente.nombre}</strong> · {c.cliente.celular}{' '}
                   <a href={`https://wa.me/${c.cliente.celular.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">
