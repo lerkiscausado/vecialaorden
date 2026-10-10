@@ -97,6 +97,16 @@ export enum EstadoPago {
   ERROR = 'error',
 }
 
+export enum EstadoConversacion {
+  /** Sin pedido en curso: se espera que el cliente cuente qué necesita. */
+  INICIO = 'inicio',
+  ESPERANDO_CIUDAD = 'esperando_ciudad',
+  ESPERANDO_UBICACION = 'esperando_ubicacion',
+  ESPERANDO_CONFIRMACION = 'esperando_confirmacion',
+  /** La solicitud ya se publicó y se avisó a los maestros. */
+  PUBLICADA = 'publicada',
+}
+
 export enum DireccionMensaje {
   ENTRANTE = 'entrante',
   SALIENTE = 'saliente',

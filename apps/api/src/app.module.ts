@@ -8,7 +8,11 @@ import { AuthModule } from './auth/auth.module';
 import { CatalogoController } from './catalogo/catalogo.controller';
 import { validarEnv } from './config/validar-env';
 import { CreditosModule } from './creditos/creditos.module';
+import { BotModule } from './bot/bot.module';
 import { IaModule } from './ia/ia.module';
+import { MaestrosModule } from './maestros/maestros.module';
+import { SolicitudesModule } from './solicitudes/solicitudes.module';
+import { UbicacionModule } from './ubicacion/ubicacion.module';
 import { opcionesBaseDeDatos } from './database/opciones';
 import { forzarUtc } from './database/utc';
 
@@ -24,6 +28,10 @@ import { forzarUtc } from './database/utc';
     AuthModule,
     CreditosModule,
     IaModule,
+    UbicacionModule,
+    SolicitudesModule,
+    MaestrosModule,
+    BotModule,
   ],
   controllers: [CatalogoController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

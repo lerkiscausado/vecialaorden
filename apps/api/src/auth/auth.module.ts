@@ -27,5 +27,6 @@ import { OtpService } from './otp.service';
   ],
   controllers: [AuthController],
   providers: [AuthService, OtpService, { provide: APP_GUARD, useClass: JwtGuard }],
+  exports: [AuthService],
 })
 export class AuthModule {}

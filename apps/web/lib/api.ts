@@ -10,13 +10,23 @@ export interface Usuario {
   rol: 'cliente' | 'maestro' | 'admin' | 'superadmin';
   celularVerificado: boolean;
   barrio: string | null;
+  ciudad: { id: number; nombre: string } | null;
+  ubicacionAproximada: boolean;
   maestro: {
     aniosExperiencia: number;
     verificacion: string;
     saldoCreditos: number;
     calificacionPromedio: number;
+    radioKm: number;
+    recibeAvisos: boolean;
     areas: { slug: string; nombre: string }[];
   } | null;
+}
+
+export interface Ciudad {
+  id: number;
+  nombre: string;
+  departamento: string;
 }
 
 export interface Sesion {

@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -55,10 +55,16 @@ export class RegistroDto {
   @IsIn([RolUsuario.CLIENTE, RolUsuario.MAESTRO], { message: 'Elige si necesitas un servicio o lo ofreces.' })
   rol: RolUsuario.CLIENTE | RolUsuario.MAESTRO;
 
+  /** Obligatoria para maestros. */
+  @ValidateIf((o: RegistroDto) => o.rol === RolUsuario.MAESTRO || o.ciudadId !== undefined)
+  @IsInt({ message: 'Elige tu ciudad.' })
+  @Type(() => Number)
+  ciudadId?: number;
+
   @IsOptional()
   @Transform(recortar)
   @MaxLength(160, { message: 'El barrio es demasiado largo.' })
-  @IsString({ message: 'Escribe tu barrio y ciudad.' })
+  @IsString({ message: 'Escribe tu barrio.' })
   barrio?: string;
 
   @Equals(true, { message: 'Debes autorizar el tratamiento de tus datos personales.' })

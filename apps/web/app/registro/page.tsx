@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { Encabezado, Pie } from '@/components/Encabezado';
 import { VerificarCodigo } from '@/components/VerificarCodigo';
-import { api, Area, ErrorApi } from '@/lib/api';
+import { api, Area, Ciudad, ErrorApi } from '@/lib/api';
 
 type Rol = 'cliente' | 'maestro';
 
@@ -13,12 +13,14 @@ function FormularioRegistro() {
   const parametros = useSearchParams();
   const [rol, setRol] = useState<Rol>(parametros.get('tipo') === 'maestro' ? 'maestro' : 'cliente');
   const [areas, setAreas] = useState<Area[]>([]);
+  const [ciudades, setCiudades] = useState<Ciudad[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [pendiente, setPendiente] = useState<{ celular: string; mensaje: string } | null>(null);
 
   useEffect(() => {
     api<Area[]>('/areas').then(setAreas).catch(() => setAreas([]));
+    api<Ciudad[]>('/ciudades').then(setCiudades).catch(() => setCiudades([]));
   }, []);
 
   async function enviar(e: React.FormEvent<HTMLFormElement>) {
@@ -36,6 +38,8 @@ function FormularioRegistro() {
       rol,
       aceptaDatos: f.get('datos') === 'on',
     };
+    const ciudad = texto('ciudad');
+    if (ciudad) cuerpo.ciudadId = Number(ciudad);
     if (rol === 'maestro') {
       cuerpo.areas = f.getAll('areas').map(String);
       cuerpo.aniosExperiencia = Number(f.get('experiencia'));
@@ -92,9 +96,19 @@ function FormularioRegistro() {
           <input id="celular" name="celular" type="tel" autoComplete="tel" placeholder="300 123 4567" required />
           <small>Te enviaremos un código por WhatsApp para confirmarlo.</small>
         </label>
+        <label className="campo" htmlFor="ciudad">
+          Ciudad
+          <select id="ciudad" name="ciudad" defaultValue="" required={rol === 'maestro'}>
+            <option value="">{rol === 'maestro' ? 'Elige tu ciudad' : 'Elige tu ciudad (opcional)'}</option>
+            {ciudades.map((c) => (
+              <option key={c.id} value={c.id}>{c.nombre}</option>
+            ))}
+          </select>
+          <small>Por ahora funcionamos en {ciudades.map((c) => c.nombre).join(' y ') || 'Bogotá y Cartagena'}.</small>
+        </label>
         <label className="campo" htmlFor="barrio">
-          Barrio y ciudad
-          <input id="barrio" name="barrio" placeholder="Ej: Cedritos, Bogotá" />
+          Barrio
+          <input id="barrio" name="barrio" placeholder="Ej: Cedritos" />
         </label>
         <label className="campo" htmlFor="correo">
           Correo <small>(opcional)</small>
