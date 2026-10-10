@@ -14,6 +14,7 @@ import { CanalSolicitud, EstadoSolicitud, TamanoTrabajo } from '../enums';
 import { decimalANumero } from '../transformers';
 import { Area } from './area.entity';
 import { Barrio } from './barrio.entity';
+import { Ciudad } from './ciudad.entity';
 import { Usuario } from './usuario.entity';
 
 /** Un trabajo que pide un cliente. */
@@ -65,6 +66,13 @@ export class Solicitud {
   urgente: boolean;
 
   @Column({ type: 'int', unsigned: true, nullable: true })
+  ciudadId: number | null;
+
+  @ManyToOne(() => Ciudad, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'ciudadId' })
+  ciudad: Ciudad | null;
+
+  @Column({ type: 'int', unsigned: true, nullable: true })
   barrioId: number | null;
 
   @ManyToOne(() => Barrio, { nullable: true, onDelete: 'SET NULL' })
@@ -79,6 +87,10 @@ export class Solicitud {
 
   @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: decimalANumero })
   longitud: number | null;
+
+  /** true si la ubicación es el centro del barrio o de la ciudad, no la exacta del cliente. */
+  @Column({ default: false })
+  ubicacionAproximada: boolean;
 
   @Column({ type: 'int', unsigned: true, nullable: true })
   precioRefMin: number | null;

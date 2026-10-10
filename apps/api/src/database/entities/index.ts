@@ -1,6 +1,8 @@
 import { Area } from './area.entity';
 import { Barrio } from './barrio.entity';
+import { Ciudad } from './ciudad.entity';
 import { CodigoOtp } from './codigo-otp.entity';
+import { Conversacion } from './conversacion.entity';
 import { ConfiguracionIa } from './configuracion-ia.entity';
 import { Cotizacion } from './cotizacion.entity';
 import { DocumentoMaestro } from './documento-maestro.entity';
@@ -18,7 +20,9 @@ import { Usuario } from './usuario.entity';
 export {
   Area,
   Barrio,
+  Ciudad,
   CodigoOtp,
+  Conversacion,
   ConfiguracionIa,
   Cotizacion,
   DocumentoMaestro,
@@ -37,7 +41,9 @@ export {
 export const ENTIDADES = [
   Area,
   Barrio,
+  Ciudad,
   CodigoOtp,
+  Conversacion,
   ConfiguracionIa,
   Cotizacion,
   DocumentoMaestro,
