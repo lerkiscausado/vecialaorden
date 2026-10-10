@@ -25,7 +25,7 @@ npm install
 
 # 2. Configurar el API
 cp apps/api/.env.example apps/api/.env
-#    → llena DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET y OTP_SECRET
+#    → llena DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, JWT_SECRET, OTP_SECRET y CONFIG_ENCRYPTION_KEY
 
 # 3. Crear las tablas
 npm run migration:run
@@ -44,6 +44,17 @@ Para generar los secretos:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
+### Crear el superadministrador
+
+El superadministrador es quien configura los modelos de IA. Primero regístrate en la web y verifica
+tu celular; luego, desde la raíz:
+
+```bash
+npm run superadmin -w apps/api -- 3001234567
+```
+
+Cierra sesión y vuelve a entrar. En tu panel aparecerá **Configuración de IA**.
+
 ### Códigos por WhatsApp en desarrollo
 
 Mientras `WHATSAPP_TOKEN` esté vacío, los códigos **no se envían**: aparecen en la consola del API
@@ -54,6 +65,26 @@ Para el envío real hace falta en Meta: una app con WhatsApp Cloud API, el núme
 (`WHATSAPP_PHONE_NUMBER_ID`), un token permanente (`WHATSAPP_TOKEN`) y una **plantilla de
 autenticación** aprobada (`WHATSAPP_OTP_TEMPLATE`) con botón de copiar código.
 
+## Inteligencia artificial (multiproveedor)
+
+El modelo que lee los pedidos de los clientes **no está fijo en el código**: el superadministrador lo
+elige en `/admin/ia`. Se pueden registrar varias conexiones y activar una por propósito.
+
+| Proveedor | Qué se necesita |
+|---|---|
+| Claude (Anthropic) | Clave de console.anthropic.com |
+| ChatGPT (OpenAI) | Clave de platform.openai.com |
+| Gemini (Google) | Clave de aistudio.google.com |
+| Compatible con OpenAI | Clave y dirección del servicio (OpenRouter, DeepSeek, Groq, servidor propio…) |
+
+- El botón **Cargar modelos** consulta al proveedor los modelos disponibles para esa clave.
+- **Probar** envía un mensaje corto y muestra la respuesta y el tiempo.
+- Las claves se guardan **cifradas** (AES-256-GCM) con `CONFIG_ENCRYPTION_KEY`. Si cambias o pierdes
+  esa llave, hay que volver a escribir las claves de IA.
+- Cada llamada queda en `registros_ia` (tokens, tiempo, errores) y se resume en la misma pantalla.
+- En el código, cualquier módulo usa `IaService.completar()` o `completarJson()` sin saber qué
+  proveedor hay detrás.
+
 ## Base de datos
 
 Las migraciones están en `apps/api/src/database/migrations`:
@@ -62,6 +93,7 @@ Las migraciones están en `apps/api/src/database/migrations`:
 |---|---|
 | `EsquemaInicial` | Crea las 16 tablas (usuarios, perfiles de maestro, áreas, barrios, códigos OTP, solicitudes, cotizaciones, notificaciones, movimientos de créditos, paquetes, pagos, reseñas, documentos, mensajes de WhatsApp) |
 | `DatosIniciales` | Carga los 7 oficios y los 3 paquetes de créditos |
+| `ConfiguracionIa` | Rol `superadmin`, tablas `configuraciones_ia` y `registros_ia` |
 
 ```bash
 npm run migration:run       # aplica las pendientes
@@ -90,6 +122,14 @@ Reglas del esquema:
 | POST | `/auth/login` | público | Entra con correo o celular + contraseña |
 | GET | `/auth/yo` | con token | Datos de la cuenta |
 | GET | `/creditos/movimientos` | maestro | Historial de créditos |
+| GET | `/admin/ia/configuraciones` | superadmin | Conexiones de IA (claves enmascaradas) |
+| POST | `/admin/ia/configuraciones` | superadmin | Agregar conexión |
+| PATCH | `/admin/ia/configuraciones/:id` | superadmin | Editar (la clave solo cambia si se envía) |
+| POST | `/admin/ia/configuraciones/:id/activar` · `/desactivar` | superadmin | Elegir la conexión activa |
+| POST | `/admin/ia/configuraciones/:id/probar` | superadmin | Probar la conexión |
+| DELETE | `/admin/ia/configuraciones/:id` | superadmin | Eliminar |
+| POST | `/admin/ia/modelos` | superadmin | Modelos disponibles en el proveedor |
+| GET | `/admin/ia/uso?dias=30` | superadmin | Consumo por conexión |
 
 El token va en el encabezado `Authorization: Bearer <token>`.
 
@@ -104,7 +144,7 @@ El token va en el encabezado `Authorization: Bearer <token>`.
 
 ## Fases
 
-1. ✅ Base: monorepo, migraciones, autenticación, inicio, registro y panel.
+1. ✅ Base: monorepo, migraciones, autenticación, inicio, registro, panel y configuración de IA.
 2. Bot de WhatsApp + análisis con IA + búsqueda de maestros cercanos.
 3. Panel del maestro: solicitudes, cotizaciones con 5 cupos y descuento de créditos.
 4. Compra de créditos con Wompi.

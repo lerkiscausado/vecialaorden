@@ -42,9 +42,19 @@ export class JwtGuard implements CanActivate {
     peticion.usuario = usuario;
 
     const roles = this.reflector.getAllAndOverride<RolUsuario[] | undefined>(ROLES, objetivos);
-    if (roles?.length && !roles.includes(usuario.rol) && usuario.rol !== RolUsuario.ADMIN) {
+    if (roles?.length && !tienePermiso(usuario.rol, roles)) {
       throw new ForbiddenException('No tienes permiso para esta acción.');
     }
     return true;
   }
+}
+
+/**
+ * El superadmin entra a todo. El admin entra a todo excepto lo exclusivo
+ * del superadmin. Los demás, solo a lo de su rol.
+ */
+export function tienePermiso(rol: RolUsuario, permitidos: RolUsuario[]): boolean {
+  if (rol === RolUsuario.SUPERADMIN) return true;
+  if (permitidos.includes(rol)) return true;
+  return rol === RolUsuario.ADMIN && !permitidos.every((r) => r === RolUsuario.SUPERADMIN);
 }

@@ -12,6 +12,13 @@ export function validarEnv(env: Record<string, unknown>): Record<string, unknown
     );
   }
 
+  if (!/^[0-9a-fA-F]{64}$/.test(String(env.CONFIG_ENCRYPTION_KEY ?? ''))) {
+    throw new Error(
+      'CONFIG_ENCRYPTION_KEY debe tener 64 caracteres hexadecimales. Genérala con: ' +
+        `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`,
+    );
+  }
+
   const inseguras = ['JWT_SECRET', 'OTP_SECRET'].filter((clave) => {
     const valor = String(env[clave]);
     return valor.length < 32 || valor.startsWith('cambia_esto');

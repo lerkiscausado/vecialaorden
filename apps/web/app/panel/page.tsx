@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Encabezado, Pie } from '@/components/Encabezado';
@@ -101,6 +102,11 @@ export default function Panel() {
                   )}
                 </dl>
                 <div className="acciones">
+                  {usuario.rol === 'superadmin' && (
+                    <Link className="boton boton-primario" href="/admin/ia">
+                      Configuración de IA
+                    </Link>
+                  )}
                   <button type="button" className="boton boton-secundario" onClick={salir}>
                     Cerrar sesión
                   </button>

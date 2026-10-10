@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { CatalogoController } from './catalogo/catalogo.controller';
 import { validarEnv } from './config/validar-env';
 import { CreditosModule } from './creditos/creditos.module';
+import { IaModule } from './ia/ia.module';
 import { opcionesBaseDeDatos } from './database/opciones';
 import { forzarUtc } from './database/utc';
 
@@ -22,6 +23,7 @@ import { forzarUtc } from './database/utc';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     AuthModule,
     CreditosModule,
+    IaModule,
   ],
   controllers: [CatalogoController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

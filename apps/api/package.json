@@ -12,7 +12,8 @@
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:show": "npm run typeorm -- migration:show",
-    "migration:generate": "npm run typeorm -- migration:generate"
+    "migration:generate": "npm run typeorm -- migration:generate",
+    "superadmin": "ts-node src/scripts/promover-superadmin.ts"
   },
   "jest": {
     "moduleFileExtensions": [

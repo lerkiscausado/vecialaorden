@@ -7,7 +7,7 @@ export interface Usuario {
   nombre: string;
   celular: string;
   correo: string | null;
-  rol: 'cliente' | 'maestro' | 'admin';
+  rol: 'cliente' | 'maestro' | 'admin' | 'superadmin';
   celularVerificado: boolean;
   barrio: string | null;
   maestro: {

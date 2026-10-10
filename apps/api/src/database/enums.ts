@@ -2,6 +2,23 @@ export enum RolUsuario {
   CLIENTE = 'cliente',
   MAESTRO = 'maestro',
   ADMIN = 'admin',
+  /** Dueño de la plataforma: además de todo lo del admin, maneja la configuración sensible (IA, claves). */
+  SUPERADMIN = 'superadmin',
+}
+
+export enum ProveedorIa {
+  ANTHROPIC = 'anthropic',
+  OPENAI = 'openai',
+  GEMINI = 'gemini',
+  /** Cualquier servicio con API compatible con OpenAI (OpenRouter, DeepSeek, Groq, un servidor propio…). */
+  OPENAI_COMPATIBLE = 'openai_compatible',
+}
+
+export enum PropositoIa {
+  /** Leer el pedido del cliente y extraer área, medidas, barrio y tamaño. */
+  ANALISIS_SOLICITUDES = 'analisis_solicitudes',
+  /** Uso general (respuestas del bot, resúmenes…). */
+  GENERAL = 'general',
 }
 
 export enum EstadoUsuario {
