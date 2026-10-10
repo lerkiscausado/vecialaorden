@@ -33,13 +33,15 @@ export const MSG = {
     '¿Me compartes la ubicación del trabajo? 📍 Toca el clip › *Ubicación* › *Enviar tu ubicación actual*. Si prefieres, escríbeme el barrio.',
   barrioNoEncontrado: (ciudad: string) =>
     `No encontré ese barrio en ${ciudad}. Para avisarles a los maestros más cercanos, compárteme la ubicación 📍 (clip › *Ubicación*). Si no puedes, escríbeme *no* y uso una ubicación aproximada.`,
-  publicada: (codigo: string, n: number) =>
+  publicada: (codigo: string, n: number, enlace: string) =>
     `¡Listo, veci! ✅ Tu pedido *#${codigo}* quedó publicado y les avisamos a *${n} ${n === 1 ? 'maestro' : 'maestros'}* cerca de ti.\n\n` +
-    `Los 5 primeros te enviarán su cotización y te las mando apenas lleguen.`,
+    `Los 5 primeros te enviarán su cotización y te las mando apenas lleguen. También puedes verlas aquí: ${enlace}`,
   publicadaSinMaestros: (codigo: string, areas: string) =>
     `Tu pedido *#${codigo}* quedó publicado ✅.\n\nPor ahora no hay maestros de ${areas} disponibles cerca de ti. Te aviso apenas uno pueda tomarlo.`,
-  yaPublicada: (codigo: string) =>
-    `Tu pedido *#${codigo}* está activo y te aviso cuando lleguen cotizaciones.\n\n` +
+  yaPublicada: (codigo: string, cotizaciones: number, enlace: string) =>
+    (cotizaciones
+      ? `Tu pedido *#${codigo}* ya tiene *${cotizaciones} ${cotizaciones === 1 ? 'cotización' : 'cotizaciones'}*. Compáralas y elige aquí: ${enlace}\n\n`
+      : `Tu pedido *#${codigo}* está activo y te aviso cuando lleguen cotizaciones.\n\n`) +
     `Si necesitas otro servicio escribe *NUEVO*, o *CANCELAR* para cancelar este pedido.`,
   cancelada: 'Listo, cancelé tu pedido. Cuando necesites algo, aquí estoy. ¡A la orden, veci!',
   nadaQueCancelar: 'No tienes ningún pedido en curso. Cuéntame qué necesitas arreglar cuando quieras.',

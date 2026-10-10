@@ -44,6 +44,7 @@ button, input, select { font: inherit; }
 .marca { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-family: var(--display); font-weight: 800; font-size: 22px; }
 .marca:hover { color: #fff; }
 .marca span { color: var(--amarillo); }
+.marca .marca-icono { color: var(--amarillo-tinta); }
 .marca-icono { width: 38px; height: 38px; border-radius: 50%; background: var(--amarillo); color: var(--amarillo-tinta); display: grid; place-items: center; font-size: 20px; }
 .nav { display: flex; gap: 10px; flex-wrap: wrap; }
 .nav a { color: #fff; text-decoration: none; font-weight: 600; font-size: 15px; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 999px; padding: 9px 16px; }
@@ -152,3 +153,110 @@ form { display: flex; flex-direction: column; gap: 14px; }
 .chip-boton { border: 1px solid var(--borde); cursor: pointer; background: #fff; color: var(--tinta); min-height: 36px; }
 .chip-boton:hover { border-color: var(--verde); }
 .chip-boton:disabled { opacity: 0.5; cursor: wait; }
+
+/* ── Fase 3: paneles por pestañas, cotizaciones y administración ── */
+.panel-ancho { max-width: 1100px; }
+.panel-cabeza { display: flex; flex-wrap: wrap; gap: 12px 20px; justify-content: space-between; align-items: flex-end; }
+.panel-cabeza h1 { font-size: clamp(26px, 4vw, 34px); font-weight: 800; }
+.pestanas { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid #d5dcd5; scrollbar-width: thin; }
+.pestanas button { flex: none; border: 0; background: none; padding: 12px 14px; min-height: 44px; font-weight: 600; font-size: 15px; color: var(--gris); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.pestanas button[aria-selected='true'] { color: var(--verde); border-bottom-color: var(--verde); }
+.pestana-contenido { min-width: 0; }
+.historial { display: grid; gap: 16px; min-width: 0; }
+.subtitulo { font-size: 16px; margin: 8px 0 0; color: var(--gris); font-family: var(--texto); font-weight: 700; }
+.vacio { display: flex; flex-direction: column; gap: 6px; background: var(--superficie); border: 1px dashed var(--borde); border-radius: 14px; padding: 22px; }
+.vacio span { color: var(--gris); }
+
+/* Cifras grandes */
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.cifra { background: var(--superficie); border: 1px solid #d5dcd5; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cifra strong { font-family: var(--display); font-size: clamp(24px, 2.6vw, 30px); line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cifra-exito strong { color: var(--exito); }
+.cifra-etiqueta { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; color: var(--gris); }
+.cifra-nota { font-size: 13px; color: var(--gris); }
+
+/* Filtros tipo pastilla */
+.filtros { display: flex; flex-wrap: wrap; gap: 6px; }
+.filtros button { border: 1px solid var(--borde); background: var(--superficie); color: var(--tinta); border-radius: 999px; padding: 7px 14px; min-height: 38px; font-weight: 600; font-size: 14px; cursor: pointer; }
+.filtros button[aria-pressed='true'] { background: var(--verde); border-color: var(--verde); color: #fff; }
+.filtros-admin { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+
+/* Pastillas de estado */
+.pastilla { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 700; white-space: nowrap; background: var(--hundido); color: var(--gris); }
+.pastilla-elegida, .pastilla-asignada, .pastilla-completada, .pastilla-verif-verificado { background: #e6f4ec; color: var(--exito); }
+.pastilla-enviada, .pastilla-abierta, .pastilla-verif-pendiente { background: #fdf3da; color: #7a5300; }
+.pastilla-cupos_llenos, .pastilla-recomendada { background: #e3eefb; color: #1d4f91; }
+.pastilla-descartada, .pastilla-cancelada, .pastilla-vencida, .pastilla-retirada { background: var(--hundido); color: var(--gris); }
+.pastilla-alerta, .pastilla-verif-rechazado { background: #fdecea; color: var(--error); }
+.texto-alerta { color: var(--error); font-weight: 600; }
+
+/* Listas de historial / pedidos */
+.lista-historial, .lista-cotizaciones { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.historial-item { background: var(--superficie); border: 1px solid #d5dcd5; border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.historial-item.estado-elegida { border-color: var(--exito); }
+.historial-cabeza { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: space-between; align-items: center; }
+.historial-resumen { margin: 0; overflow-wrap: anywhere; }
+.historial-datos { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13.5px; color: var(--gris); }
+.historial-pie { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: space-between; align-items: center; }
+.historial-pie > strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+
+/* Trabajos disponibles */
+.lista-trabajos { display: grid; gap: 12px; }
+.trabajo { background: var(--superficie); border: 1px solid #d5dcd5; border-radius: 14px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.trabajo-inactivo { opacity: 0.7; }
+.trabajo-cabeza { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: space-between; align-items: center; }
+.trabajo-resumen { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
+.trabajo-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 8px 16px; margin: 0; font-size: 14px; }
+.trabajo-datos dt { color: var(--gris); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.trabajo-datos dd { margin: 0; }
+.chip-urgente { background: #fdecea; color: var(--error); }
+.cupos { display: inline-flex; gap: 3px; vertical-align: middle; }
+.cupo { width: 16px; height: 8px; border-radius: 3px; background: var(--hundido); border: 1px solid var(--borde); }
+.cupo-usado { background: var(--verde); border-color: var(--verde); }
+.form-cotizar { border-top: 1px solid #e1e6e1; padding-top: 12px; }
+.campo textarea { border: 1px solid var(--borde); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 16px; font-weight: 400; resize: vertical; width: 100%; }
+.total-cotizacion { display: flex; justify-content: space-between; align-items: baseline; background: var(--hundido); border-radius: 10px; padding: 10px 14px; }
+.total-cotizacion strong { font-family: var(--display); font-size: 24px; font-variant-numeric: tabular-nums; }
+
+/* Créditos */
+.paquetes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; margin-top: 8px; }
+.paquete { background: var(--superficie); border: 1px solid #d5dcd5; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+.paquete strong { font-family: var(--display); font-size: 22px; }
+.tabla .positivo { color: var(--exito); font-weight: 600; }
+
+/* Cotizaciones que ve el cliente */
+.oferta { background: var(--superficie); border: 1px solid #d5dcd5; border-radius: 14px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.oferta-top { border: 2px solid var(--amarillo); }
+.oferta.estado-descartada { opacity: 0.6; }
+.oferta.estado-elegida { border: 2px solid var(--exito); }
+.oferta-cabeza { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: flex-start; }
+.oferta-nombre { font-size: 18px; }
+.verificado { color: var(--exito); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.oferta-precio { text-align: right; display: flex; flex-direction: column; margin-left: auto; }
+.oferta-precio strong { font-family: var(--display); font-size: 26px; font-variant-numeric: tabular-nums; }
+.oferta-mensaje { margin: 0; font-style: italic; color: var(--tinta); overflow-wrap: anywhere; }
+.barra-puntaje { height: 6px; border-radius: 3px; background: var(--hundido); overflow: hidden; }
+.barra-puntaje span { display: block; height: 100%; background: var(--verde); border-radius: 3px; }
+.confirmar { background: #fdf3da; border-radius: 10px; padding: 10px 12px; }
+.elegido { border-color: var(--exito); background: #f3faf6; }
+
+/* Administración */
+.cuadricula-admin { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.cuadricula-admin .tarjeta { gap: 12px; padding: 20px; }
+.fila-ajuste { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px; align-items: end; background: var(--hundido); border-radius: 10px; padding: 12px; }
+.tabla-pedidos td { vertical-align: top; }
+.tabla-pedidos .sub { font-size: 12.5px; max-width: 32ch; }
+
+/* Gráficos */
+.graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; }
+.grafico { margin: 0; background: var(--superficie); border: 1px solid #d5dcd5; border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.grafico figcaption { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; color: var(--gris); }
+.grafico figcaption strong { font-family: var(--display); font-size: 22px; color: var(--tinta); font-variant-numeric: tabular-nums; }
+.grafico-lienzo { position: relative; }
+.grafico-lienzo svg { width: 100%; height: auto; display: block; overflow: visible; }
+.grafico-rejilla { stroke: #e1e6e1; stroke-width: 1; }
+.grafico-eje { fill: var(--gris); font-size: 11px; font-family: var(--texto); font-variant-numeric: tabular-nums; }
+.grafico-barra { fill: var(--verde); }
+.grafico-barra.activa { fill: var(--verde-oscuro); }
+.grafico-tooltip { position: absolute; top: 0; transform: translateX(-50%); background: var(--tinta); color: #fff; border-radius: 8px; padding: 5px 9px; font-size: 12.5px; pointer-events: none; display: flex; flex-direction: column; white-space: nowrap; }
+.grafico-tabla summary { cursor: pointer; font-size: 13px; color: var(--verde); font-weight: 600; }

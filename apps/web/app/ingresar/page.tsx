@@ -1,16 +1,30 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import { Encabezado, Pie } from '@/components/Encabezado';
 import { VerificarCodigo } from '@/components/VerificarCodigo';
 import { api, ErrorApi, guardarToken, Sesion } from '@/lib/api';
 
 type Modo = 'codigo' | 'password';
 
+/** Solo rutas internas (evita redirigir a otro sitio). */
+function destinoSeguro(valor: string | null): string {
+  return valor && valor.startsWith('/') && !valor.startsWith('//') ? valor : '/panel';
+}
+
 export default function Ingresar() {
+  return (
+    <Suspense>
+      <FormularioIngreso />
+    </Suspense>
+  );
+}
+
+function FormularioIngreso() {
   const router = useRouter();
+  const destino = destinoSeguro(useSearchParams().get('volver'));
   const [modo, setModo] = useState<Modo>('codigo');
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -46,7 +60,7 @@ export default function Ingresar() {
         cuerpo: { usuario: String(f.get('usuario') ?? ''), password: String(f.get('password') ?? '') },
       });
       guardarToken(sesion.token);
-      router.push('/panel');
+      router.push(destino);
     } catch (err) {
       setError(err instanceof ErrorApi ? err.message : 'Algo salió mal. Intenta de nuevo.');
       setCargando(false);
@@ -78,7 +92,7 @@ export default function Ingresar() {
             <VerificarCodigo
               celular={pendiente.celular}
               mensaje={pendiente.mensaje}
-              onSesion={() => router.push('/panel')}
+              onSesion={() => router.push(destino)}
               onCambiarNumero={() => setPendiente(null)}
             />
           )}

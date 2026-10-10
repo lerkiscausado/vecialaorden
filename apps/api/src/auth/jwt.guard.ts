@@ -7,7 +7,10 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { RolUsuario } from '../database/enums';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { Usuario } from '../database/entities';
+import { EstadoUsuario, RolUsuario } from '../database/enums';
 import { ES_PUBLICO, ROLES, UsuarioJwt } from './decoradores';
 
 /**
@@ -22,6 +25,7 @@ export class JwtGuard implements CanActivate {
   constructor(
     private readonly jwt: JwtService,
     private readonly reflector: Reflector,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -32,13 +36,24 @@ export class JwtGuard implements CanActivate {
     const [tipo, token] = String(peticion.headers.authorization ?? '').split(' ');
     if (tipo !== 'Bearer' || !token) throw new UnauthorizedException('Inicia sesión para continuar.');
 
-    let usuario: UsuarioJwt;
+    let id: number;
     try {
       const datos = await this.jwt.verifyAsync<{ sub: number; rol: RolUsuario }>(token);
-      usuario = { id: Number(datos.sub), rol: datos.rol };
+      id = Number(datos.sub);
     } catch {
       throw new UnauthorizedException('Tu sesión expiró. Vuelve a iniciar sesión.');
     }
+
+    // El rol y el estado se leen de la base en cada petición: así una suspensión
+    // o un cambio de rol aplica de inmediato, sin esperar a que venza el token.
+    const actual = await this.dataSource
+      .getRepository(Usuario)
+      .findOne({ where: { id }, select: { id: true, rol: true, estado: true } });
+    if (!actual) throw new UnauthorizedException('Tu sesión ya no es válida. Vuelve a iniciar sesión.');
+    if (actual.estado !== EstadoUsuario.ACTIVO) {
+      throw new ForbiddenException('Tu cuenta está suspendida. Escríbenos para revisarla.');
+    }
+    const usuario: UsuarioJwt = { id: actual.id, rol: actual.rol };
     peticion.usuario = usuario;
 
     const roles = this.reflector.getAllAndOverride<RolUsuario[] | undefined>(ROLES, objetivos);

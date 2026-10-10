@@ -164,7 +164,7 @@ export class ConversacionService {
         return;
       }
       if (activa && solicitud) {
-        r.push(MSG.yaPublicada(solicitud.codigo));
+        r.push(MSG.yaPublicada(solicitud.codigo, solicitud.cuposUsados, this.urlWeb(`/pedidos/${solicitud.codigo}`)));
         return;
       }
       // La anterior ya terminó: este mensaje empieza un pedido nuevo.
@@ -269,7 +269,7 @@ export class ConversacionService {
       conv.contexto = null;
       r.push(
         avisados
-          ? MSG.publicada(solicitud.codigo, avisados)
+          ? MSG.publicada(solicitud.codigo, avisados, this.urlWeb(`/pedidos/${solicitud.codigo}`))
           : MSG.publicadaSinMaestros(solicitud.codigo, (solicitud.areas ?? []).map((a) => a.nombre.toLowerCase()).join(' o ')),
       );
       return;
@@ -450,10 +450,14 @@ export class ConversacionService {
   }
 
   private urlPrivacidad(): string {
+    return this.urlWeb('/privacidad');
+  }
+
+  private urlWeb(ruta: string): string {
     const base = (this.config.get<string>('WEB_PUBLIC_URL') ?? this.config.get<string>('WEB_ORIGIN') ?? '')
       .split(',')[0]
       .trim()
       .replace(/\/+$/, '');
-    return `${base || 'https://vecialaorden.com'}/privacidad`;
+    return `${base || 'https://vecialaorden.com'}${ruta}`;
   }
 }
