@@ -118,6 +118,35 @@ ubicaciones de prueba y se ve lo que entendió la IA y a qué maestros se avisó
 > Por ahora los avisos a maestros se registran en `notificaciones_solicitud` y se muestran en la
 > consola del API; el envío real por correo y WhatsApp se conecta con las cuentas de Resend y Meta.
 
+## Cotizaciones
+
+1. El maestro ve en **Trabajos** los pedidos de los que se le avisó (sus oficios, dentro de su radio).
+2. Cotiza con mano de obra, materiales, mensaje, fecha y días de trabajo. Cotizar cuesta 1, 3 o 5
+   créditos según el tamaño del trabajo.
+3. Solo los **5 primeros** entran. El pedido se bloquea en la base mientras se cotiza, así dos maestros
+   no pueden tomar el último cupo a la vez; quien llega tarde no pierde créditos.
+4. El cliente recibe un aviso por cada cotización con el enlace `/pedidos/CODIGO`, donde las ve
+   ordenadas (calificación 30%, precio justo 25%, rapidez 20%, cercanía 15%, experiencia 10%) y elige.
+5. Al elegir: el maestro elegido recibe el contacto del cliente y viceversa; a los demás se les avisa.
+   Los celulares solo se revelan después de elegir.
+
+**Panel del maestro** (`/panel`), por pestañas: *Trabajos*, *Mis cotizaciones* (enviadas, elegidas,
+en espera, valor ganado y filtros), *Créditos* (saldo, paquetes y movimientos) y *Mi zona y cuenta*.
+
+## Panel administrativo (solo superadmin)
+
+`/admin`, con tres pestañas:
+
+- **Resumen**: pedidos publicados, % con cotización, % con maestro elegido, cotizaciones por pedido,
+  tiempo a la primera cotización, ingresos, créditos (comprados, regalados, usados, ajustes), maestros
+  por verificar, uso de la IA, cifras por ciudad y gráficos diarios (7, 30 o 90 días).
+- **Maestros**: buscar y filtrar; verificar o rechazar, suspender o reactivar y ajustar créditos
+  (queda registrado en el libro con el motivo).
+- **Pedidos**: todos los pedidos con cliente, lugar, maestros avisados, cotizaciones y estado.
+
+Una suspensión o un cambio de rol aplica de inmediato: en cada petición se revisa el estado y el rol
+actuales de la cuenta, no solo lo que dice el token.
+
 ## Inteligencia artificial (multiproveedor)
 
 El modelo que lee los pedidos de los clientes **no está fijo en el código**: el superadministrador lo
@@ -189,6 +218,16 @@ Reglas del esquema:
 | PATCH | `/maestros/yo/zona` | maestro | Ciudad, barrio o ubicación exacta, radio y avisos |
 | POST | `/admin/simulador/mensajes` | admin | Envía un mensaje al bot como cliente |
 | GET · DELETE | `/admin/simulador/:celular` | admin | Ver o reiniciar una conversación de prueba |
+| GET | `/maestros/yo/trabajos` | maestro | Trabajos avisados y si puede cotizarlos |
+| POST | `/maestros/yo/trabajos/:codigo/cotizar` | maestro | Enviar cotización (descuenta créditos) |
+| GET | `/maestros/yo/cotizaciones?estado=` | maestro | Historial con resumen |
+| GET | `/pedidos` · `/pedidos/:codigo` | con token | Pedidos del usuario y cotizaciones ordenadas |
+| POST | `/pedidos/:codigo/elegir` | con token | Elegir maestro |
+| GET | `/admin/resumen?dias=30` | superadmin | Cifras del tablero |
+| GET | `/admin/maestros` · `/admin/pedidos` | superadmin | Listados con filtros |
+| PATCH | `/admin/maestros/:id/verificacion` | superadmin | Verificar o rechazar |
+| PATCH | `/admin/usuarios/:id/estado` | superadmin | Suspender o reactivar |
+| POST | `/admin/maestros/:id/creditos` | superadmin | Ajuste de créditos con motivo |
 
 El token va en el encabezado `Authorization: Bearer <token>`.
 
@@ -197,7 +236,9 @@ El token va en el encabezado `Authorization: Bearer <token>`.
 - **Seguridad de sesión:** hoy se usa solo un token de acceso (7 días) guardado en el navegador.
   Pasar a token de acceso corto + token de renovación en cookie `httpOnly`.
 - **Barrios:** importar los barrios de Bogotá y Cartagena (ver "Ciudades y barrios").
-- **WhatsApp real:** conectar el webhook de Meta a `ConversacionService` y enviar los avisos a maestros.
+- **WhatsApp real:** conectar el webhook de Meta a `ConversacionService`. Los avisos (`MensajeriaService`)
+  ya se envían si WhatsApp está configurado, pero fuera de la ventana de 24 horas Meta exige plantillas aprobadas.
+- **Reseñas:** que el cliente marque el trabajo como terminado y califique al maestro.
 - **Política de datos:** `/privacidad` es un borrador; el texto final debe revisarlo un abogado.
 - **Precios de referencia:** las columnas `precioRefMin` y `precioRefMax` de `areas` están vacías
   hasta tener datos reales.
@@ -206,5 +247,5 @@ El token va en el encabezado `Authorization: Bearer <token>`.
 
 1. ✅ Base: monorepo, migraciones, autenticación, inicio, registro, panel y configuración de IA.
 2. ✅ Cerebro del bot + análisis con IA + ciudades + zona del maestro + simulador. (Falta conectar el webhook de Meta.)
-3. Panel del maestro: solicitudes, cotizaciones con 5 cupos y descuento de créditos.
+3. ✅ Cotizaciones con 5 cupos, elección del cliente, panel del maestro por pestañas y panel administrativo.
 4. Compra de créditos con Wompi.

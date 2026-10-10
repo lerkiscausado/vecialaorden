@@ -43,6 +43,19 @@ export class WhatsappService {
     });
   }
 
+  /**
+   * Mensaje de texto libre. Meta solo lo entrega si la persona escribió en las
+   * últimas 24 horas; fuera de esa ventana hay que usar una plantilla aprobada.
+   */
+  async enviarTexto(celular: string, texto: string): Promise<void> {
+    await this.enviar({
+      messaging_product: 'whatsapp',
+      to: celular.replace('+', ''),
+      type: 'text',
+      text: { body: texto.slice(0, 4096), preview_url: true },
+    });
+  }
+
   private async enviar(cuerpo: Record<string, unknown>): Promise<void> {
     const version = this.config.get('WHATSAPP_API_VERSION', 'v21.0');
     const phoneId = this.config.get('WHATSAPP_PHONE_NUMBER_ID');

@@ -4,11 +4,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { CatalogoController } from './catalogo/catalogo.controller';
 import { validarEnv } from './config/validar-env';
 import { CreditosModule } from './creditos/creditos.module';
 import { BotModule } from './bot/bot.module';
+import { CotizacionesModule } from './cotizaciones/cotizaciones.module';
+import { MensajeriaModule } from './mensajeria/mensajeria.module';
 import { IaModule } from './ia/ia.module';
 import { MaestrosModule } from './maestros/maestros.module';
 import { SolicitudesModule } from './solicitudes/solicitudes.module';
@@ -32,6 +35,9 @@ import { forzarUtc } from './database/utc';
     SolicitudesModule,
     MaestrosModule,
     BotModule,
+    MensajeriaModule,
+    CotizacionesModule,
+    AdminModule,
   ],
   controllers: [CatalogoController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

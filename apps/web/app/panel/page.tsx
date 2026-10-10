@@ -2,19 +2,16 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { MisPedidos } from '@/components/cliente/MisPedidos';
 import { Encabezado, Pie } from '@/components/Encabezado';
+import { MisCotizaciones } from '@/components/maestro/MisCotizaciones';
+import { MisCreditos } from '@/components/maestro/MisCreditos';
+import { TrabajosDisponibles } from '@/components/maestro/TrabajosDisponibles';
 import { ZonaTrabajo } from '@/components/ZonaTrabajo';
-import { api, borrarToken, ErrorApi, leerToken, Movimiento, Usuario } from '@/lib/api';
+import { api, borrarToken, ErrorApi, leerToken, Usuario } from '@/lib/api';
 
-const TIPOS: Record<string, string> = {
-  compra: 'Compra',
-  regalo: 'Regalo',
-  cotizacion: 'Cotización',
-  devolucion: 'Devolución',
-  vencimiento: 'Vencimiento',
-  ajuste: 'Ajuste',
-};
+type Pestana = 'trabajos' | 'cotizaciones' | 'creditos' | 'cuenta' | 'pedidos';
 
 const VERIFICACION: Record<string, string> = {
   pendiente: 'Documentos pendientes de revisión',
@@ -22,38 +19,74 @@ const VERIFICACION: Record<string, string> = {
   rechazado: 'Verificación rechazada',
 };
 
-const fecha = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+const CLAVE_PESTANA = 'veci_pestana';
 
 export default function Panel() {
   const router = useRouter();
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [pestana, setPestana] = useState<Pestana | null>(null);
+
+  const cargar = useCallback(async () => {
+    try {
+      const u = await api<Usuario>('/auth/yo');
+      setUsuario(u);
+      return u;
+    } catch (err) {
+      if (err instanceof ErrorApi && err.estado === 401) {
+        borrarToken();
+        router.replace('/ingresar?volver=/panel');
+      } else {
+        setError(err instanceof ErrorApi ? err.message : 'No pudimos cargar tu cuenta.');
+      }
+      return null;
+    }
+  }, [router]);
 
   useEffect(() => {
     if (!leerToken()) {
-      router.replace('/ingresar');
+      router.replace('/ingresar?volver=/panel');
       return;
     }
-    api<Usuario>('/auth/yo')
-      .then(async (u) => {
-        setUsuario(u);
-        if (u.rol === 'maestro') setMovimientos(await api<Movimiento[]>('/creditos/movimientos'));
-      })
-      .catch((err) => {
-        if (err instanceof ErrorApi && err.estado === 401) {
-          borrarToken();
-          router.replace('/ingresar');
-        } else {
-          setError(err instanceof ErrorApi ? err.message : 'No pudimos cargar tu cuenta.');
-        }
-      });
-  }, [router]);
+    cargar().then((u) => {
+      if (!u) return;
+      let guardada: string | null = null;
+      try {
+        guardada = sessionStorage.getItem(CLAVE_PESTANA);
+      } catch {
+        /* sin almacenamiento */
+      }
+      const validas: Pestana[] = u.maestro ? ['trabajos', 'cotizaciones', 'creditos', 'cuenta'] : ['pedidos', 'cuenta'];
+      setPestana(validas.includes(guardada as Pestana) ? (guardada as Pestana) : validas[0]);
+    });
+  }, [router, cargar]);
+
+  function cambiar(p: Pestana) {
+    setPestana(p);
+    try {
+      sessionStorage.setItem(CLAVE_PESTANA, p);
+    } catch {
+      /* sin almacenamiento */
+    }
+  }
 
   function salir() {
     borrarToken();
     router.push('/');
   }
+
+  const m = usuario?.maestro;
+  const pestanas: { id: Pestana; nombre: string }[] = m
+    ? [
+        { id: 'trabajos', nombre: 'Trabajos' },
+        { id: 'cotizaciones', nombre: 'Mis cotizaciones' },
+        { id: 'creditos', nombre: `Créditos (${m.saldoCreditos})` },
+        { id: 'cuenta', nombre: 'Mi zona y cuenta' },
+      ]
+    : [
+        { id: 'pedidos', nombre: 'Mis pedidos' },
+        { id: 'cuenta', nombre: 'Mi cuenta' },
+      ];
 
   return (
     <>
@@ -65,95 +98,95 @@ export default function Panel() {
 
           {usuario && (
             <>
-              <div className="tarjeta" style={{ maxWidth: 'none', margin: 0 }}>
+              <div className="panel-cabeza">
                 <div>
                   <h1>¡A la orden, {usuario.nombre.split(' ')[0]}!</h1>
-                  <p className="sub">
-                    {usuario.rol === 'maestro'
-                      ? 'Aquí verás tus créditos y, muy pronto, los trabajos cerca de ti.'
-                      : 'Cuando necesites un arreglo, escríbenos por WhatsApp y te mandamos las cotizaciones.'}
-                  </p>
+                  {m && (
+                    <p className="sub">
+                      {VERIFICACION[m.verificacion] ?? m.verificacion} · {m.saldoCreditos} créditos
+                    </p>
+                  )}
                 </div>
-                <dl className="lista-datos">
-                  <dt>Celular</dt>
-                  <dd>{usuario.celular}</dd>
-                  {usuario.correo && (
-                    <>
-                      <dt>Correo</dt>
-                      <dd>{usuario.correo}</dd>
-                    </>
-                  )}
-                  {(usuario.ciudad || usuario.barrio) && (
-                    <>
-                      <dt>Ubicación</dt>
-                      <dd>{[usuario.barrio, usuario.ciudad?.nombre].filter(Boolean).join(', ')}</dd>
-                    </>
-                  )}
-                  {usuario.maestro && (
-                    <>
-                      <dt>Oficios</dt>
-                      <dd className="chips">
-                        {usuario.maestro.areas.map((a) => (
-                          <span key={a.slug} className="chip">{a.nombre}</span>
-                        ))}
-                      </dd>
-                      <dt>Estado</dt>
-                      <dd>{VERIFICACION[usuario.maestro.verificacion] ?? usuario.maestro.verificacion}</dd>
-                    </>
-                  )}
-                </dl>
                 <div className="acciones">
                   {usuario.rol === 'superadmin' && (
-                    <Link className="boton boton-primario" href="/admin/ia">
-                      Configuración de IA
+                    <Link className="boton boton-primario" href="/admin">
+                      Panel administrativo
                     </Link>
                   )}
-                  {(usuario.rol === 'superadmin' || usuario.rol === 'admin') && (
+                  {usuario.rol === 'admin' && (
                     <Link className="boton boton-secundario" href="/admin/simulador">
                       Simulador del bot
                     </Link>
                   )}
-                  <button type="button" className="boton boton-secundario" onClick={salir}>
-                    Cerrar sesión
-                  </button>
                 </div>
               </div>
 
-              {usuario.maestro && <ZonaTrabajo usuario={usuario} onGuardado={setUsuario} />}
+              <div className="pestanas" role="tablist" aria-label="Secciones del panel">
+                {pestanas.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="tab"
+                    id={`tab-${p.id}`}
+                    aria-selected={pestana === p.id}
+                    aria-controls={`panel-${p.id}`}
+                    onClick={() => cambiar(p.id)}
+                  >
+                    {p.nombre}
+                  </button>
+                ))}
+              </div>
 
-              {usuario.maestro && (
-                <div className="tarjeta" style={{ maxWidth: 'none', margin: 0 }}>
-                  <h2>Tus créditos</h2>
-                  <div className="saldo">
-                    <strong>{usuario.maestro.saldoCreditos}</strong>
-                    <span className="sub">créditos disponibles para cotizar</span>
+              <section role="tabpanel" id={`panel-${pestana}`} aria-labelledby={`tab-${pestana}`} className="pestana-contenido">
+                {pestana === 'trabajos' && m && <TrabajosDisponibles saldo={m.saldoCreditos} onCotizado={cargar} />}
+                {pestana === 'cotizaciones' && <MisCotizaciones />}
+                {pestana === 'creditos' && m && <MisCreditos saldo={m.saldoCreditos} />}
+                {pestana === 'pedidos' && <MisPedidos />}
+                {pestana === 'cuenta' && (
+                  <div className="historial">
+                    {m && <ZonaTrabajo usuario={usuario} onGuardado={setUsuario} />}
+                    <section className="tarjeta ancha">
+                      <h2 style={{ fontSize: 20 }}>Mi cuenta</h2>
+                      <dl className="lista-datos">
+                        <dt>Celular</dt>
+                        <dd>{usuario.celular}</dd>
+                        {usuario.correo && (
+                          <>
+                            <dt>Correo</dt>
+                            <dd>{usuario.correo}</dd>
+                          </>
+                        )}
+                        {(usuario.ciudad || usuario.barrio) && (
+                          <>
+                            <dt>Ubicación</dt>
+                            <dd>{[usuario.barrio, usuario.ciudad?.nombre].filter(Boolean).join(', ')}</dd>
+                          </>
+                        )}
+                        {m && (
+                          <>
+                            <dt>Oficios</dt>
+                            <dd className="chips">
+                              {m.areas.map((a) => (
+                                <span key={a.slug} className="chip">{a.nombre}</span>
+                              ))}
+                            </dd>
+                          </>
+                        )}
+                      </dl>
+                      <div className="acciones">
+                        {m && (
+                          <button type="button" className="boton boton-secundario" onClick={() => cambiar('pedidos')}>
+                            Mis pedidos como cliente
+                          </button>
+                        )}
+                        <button type="button" className="boton boton-secundario" onClick={salir}>
+                          Cerrar sesión
+                        </button>
+                      </div>
+                    </section>
                   </div>
-                  {movimientos.length > 0 && (
-                    <div className="tabla-caja">
-                      <table className="tabla">
-                        <thead>
-                          <tr>
-                            <th>Fecha</th>
-                            <th>Movimiento</th>
-                            <th className="num">Créditos</th>
-                            <th className="num">Saldo</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {movimientos.map((m) => (
-                            <tr key={m.id}>
-                              <td>{fecha.format(new Date(m.creadoEn))}</td>
-                              <td>{m.descripcion ?? TIPOS[m.tipo] ?? m.tipo}</td>
-                              <td className="num">{m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}</td>
-                              <td className="num">{m.saldoResultante}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
+              </section>
             </>
           )}
         </div>
