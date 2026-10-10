@@ -13,7 +13,8 @@
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:show": "npm run typeorm -- migration:show",
     "migration:generate": "npm run typeorm -- migration:generate",
-    "superadmin": "ts-node src/scripts/promover-superadmin.ts"
+    "superadmin": "ts-node src/scripts/promover-superadmin.ts",
+    "importar-barrios": "ts-node src/scripts/importar-barrios.ts"
   },
   "jest": {
     "moduleFileExtensions": [

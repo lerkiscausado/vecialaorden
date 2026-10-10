@@ -11,6 +11,7 @@ import {
 import { EstadoUsuario, RolUsuario } from '../enums';
 import { decimalANumero } from '../transformers';
 import { Barrio } from './barrio.entity';
+import { Ciudad } from './ciudad.entity';
 import { PerfilMaestro } from './perfil-maestro.entity';
 
 @Entity('usuarios')
@@ -42,6 +43,13 @@ export class Usuario {
   celularVerificado: boolean;
 
   @Column({ type: 'int', unsigned: true, nullable: true })
+  ciudadId: number | null;
+
+  @ManyToOne(() => Ciudad, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'ciudadId' })
+  ciudad: Ciudad | null;
+
+  @Column({ type: 'int', unsigned: true, nullable: true })
   barrioId: number | null;
 
   @ManyToOne(() => Barrio, { nullable: true, onDelete: 'SET NULL' })
@@ -57,6 +65,10 @@ export class Usuario {
 
   @Column({ type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: decimalANumero })
   longitud: number | null;
+
+  /** true si la ubicación guardada es el centro del barrio o de la ciudad, no la exacta. */
+  @Column({ default: true })
+  ubicacionAproximada: boolean;
 
   /** Fecha en que aceptó el tratamiento de datos (Ley 1581 de 2012). */
   @Column({ type: 'datetime', nullable: true })

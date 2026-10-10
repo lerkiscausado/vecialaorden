@@ -16,6 +16,7 @@ import { normalizarCelular } from '../common/telefono';
 import { CreditosService } from '../creditos/creditos.service';
 import { Area, PerfilMaestro, Usuario } from '../database/entities';
 import { EstadoUsuario, PropositoOtp, RolUsuario, TipoMovimientoCredito } from '../database/enums';
+import { UbicacionService } from '../ubicacion/ubicacion.service';
 import { LoginDto, RegistroDto } from './dto';
 import { OtpService } from './otp.service';
 
@@ -34,11 +35,15 @@ export interface PerfilPublico {
   rol: RolUsuario;
   celularVerificado: boolean;
   barrio: string | null;
+  ciudad: { id: number; nombre: string } | null;
+  ubicacionAproximada: boolean;
   maestro: {
     aniosExperiencia: number;
     verificacion: string;
     saldoCreditos: number;
     calificacionPromedio: number;
+    radioKm: number;
+    recibeAvisos: boolean;
     areas: { slug: string; nombre: string }[];
   } | null;
 }
@@ -53,6 +58,7 @@ export class AuthService {
     private readonly otp: OtpService,
     private readonly creditos: CreditosService,
     private readonly config: ConfigService,
+    private readonly ubicacion: UbicacionService,
   ) {}
 
   /**
@@ -81,6 +87,17 @@ export class AuthService {
       if (areas.length !== slugs.length) throw new BadRequestException('Alguno de los oficios no es válido.');
     }
 
+    // Ciudad y punto inicial: el barrio si lo reconocemos, si no el centro de la ciudad.
+    // El maestro puede fijar después su ubicación exacta en "Mi zona de trabajo".
+    let ubicacion: { ciudadId: number; barrioId: number | null; latitud: number; longitud: number } | null = null;
+    if (dto.ciudadId !== undefined) {
+      const ciudad = await this.ubicacion.ciudad(dto.ciudadId);
+      if (!ciudad?.activa) throw new BadRequestException('Por ahora solo funcionamos en Bogotá y Cartagena.');
+      const barrio = await this.ubicacion.buscarBarrio(ciudad.id, dto.barrio);
+      const punto = barrio ?? ciudad;
+      ubicacion = { ciudadId: ciudad.id, barrioId: barrio?.id ?? null, latitud: punto.latitud, longitud: punto.longitud };
+    }
+
     const passwordHash = dto.password ? await bcrypt.hash(dto.password, RONDAS_BCRYPT) : null;
 
     await this.dataSource.transaction(async (m) => {
@@ -93,6 +110,7 @@ export class AuthService {
         passwordHash,
         rol: dto.rol,
         barrioTexto: dto.barrio ?? null,
+        ...(ubicacion ? { ...ubicacion, ubicacionAproximada: true } : {}),
         aceptoDatosEn: new Date(),
         celularVerificado: false,
       });
@@ -169,7 +187,7 @@ export class AuthService {
   async perfil(usuarioId: number): Promise<PerfilPublico> {
     const usuario = await this.dataSource.getRepository(Usuario).findOne({
       where: { id: usuarioId },
-      relations: { barrio: true, perfilMaestro: { areas: true } },
+      relations: { barrio: true, ciudad: true, perfilMaestro: { areas: true } },
     });
     if (!usuario) throw new NotFoundException('La cuenta no existe.');
     const m = usuario.perfilMaestro;
@@ -181,12 +199,16 @@ export class AuthService {
       rol: usuario.rol,
       celularVerificado: usuario.celularVerificado,
       barrio: usuario.barrio?.nombre ?? usuario.barrioTexto,
+      ciudad: usuario.ciudad ? { id: usuario.ciudad.id, nombre: usuario.ciudad.nombre } : null,
+      ubicacionAproximada: usuario.ubicacionAproximada,
       maestro: m
         ? {
             aniosExperiencia: m.aniosExperiencia,
             verificacion: m.verificacion,
             saldoCreditos: m.saldoCreditos,
             calificacionPromedio: m.calificacionPromedio,
+            radioKm: m.radioKm,
+            recibeAvisos: m.recibeAvisos,
             areas: (m.areas ?? []).map((a) => ({ slug: a.slug, nombre: a.nombre })),
           }
         : null,

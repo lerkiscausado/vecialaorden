@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Encabezado, Pie } from '@/components/Encabezado';
+import { ZonaTrabajo } from '@/components/ZonaTrabajo';
 import { api, borrarToken, ErrorApi, leerToken, Movimiento, Usuario } from '@/lib/api';
 
 const TIPOS: Record<string, string> = {
@@ -82,10 +83,10 @@ export default function Panel() {
                       <dd>{usuario.correo}</dd>
                     </>
                   )}
-                  {usuario.barrio && (
+                  {(usuario.ciudad || usuario.barrio) && (
                     <>
-                      <dt>Barrio</dt>
-                      <dd>{usuario.barrio}</dd>
+                      <dt>Ubicación</dt>
+                      <dd>{[usuario.barrio, usuario.ciudad?.nombre].filter(Boolean).join(', ')}</dd>
                     </>
                   )}
                   {usuario.maestro && (
@@ -107,11 +108,18 @@ export default function Panel() {
                       Configuración de IA
                     </Link>
                   )}
+                  {(usuario.rol === 'superadmin' || usuario.rol === 'admin') && (
+                    <Link className="boton boton-secundario" href="/admin/simulador">
+                      Simulador del bot
+                    </Link>
+                  )}
                   <button type="button" className="boton boton-secundario" onClick={salir}>
                     Cerrar sesión
                   </button>
                 </div>
               </div>
+
+              {usuario.maestro && <ZonaTrabajo usuario={usuario} onGuardado={setUsuario} />}
 
               {usuario.maestro && (
                 <div className="tarjeta" style={{ maxWidth: 'none', margin: 0 }}>
