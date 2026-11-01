@@ -222,6 +222,12 @@ form { display: flex; flex-direction: column; gap: 14px; }
 .paquetes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; margin-top: 8px; }
 .paquete { background: var(--superficie); border: 1px solid #d5dcd5; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 2px; }
 .paquete strong { font-family: var(--display); font-size: 22px; }
+.boton-paquete { margin-top: 10px; }
+.paquetes + .sub, .paquetes + .aviso { margin-top: 12px; }
+.lista-pagos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.lista-pagos li { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--superficie); border: 1px solid #d5dcd5; border-radius: 12px; padding: 10px 14px; font-size: 15px; min-width: 0; overflow-wrap: anywhere; }
+.resultado-pago { text-align: center; display: grid; gap: 12px; justify-items: center; }
+.resultado-pago .icono-resultado { font-size: 48px; line-height: 1; }
 .tabla .positivo { color: var(--exito); font-weight: 600; }
 
 /* Cotizaciones que ve el cliente */

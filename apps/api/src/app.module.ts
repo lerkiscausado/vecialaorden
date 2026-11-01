@@ -14,6 +14,7 @@ import { CotizacionesModule } from './cotizaciones/cotizaciones.module';
 import { MensajeriaModule } from './mensajeria/mensajeria.module';
 import { IaModule } from './ia/ia.module';
 import { MaestrosModule } from './maestros/maestros.module';
+import { PagosModule } from './pagos/pagos.module';
 import { SolicitudesModule } from './solicitudes/solicitudes.module';
 import { UbicacionModule } from './ubicacion/ubicacion.module';
 import { opcionesBaseDeDatos } from './database/opciones';
@@ -38,6 +39,7 @@ import { forzarUtc } from './database/utc';
     MensajeriaModule,
     CotizacionesModule,
     AdminModule,
+    PagosModule,
   ],
   controllers: [CatalogoController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

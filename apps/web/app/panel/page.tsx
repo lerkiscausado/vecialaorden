@@ -51,9 +51,10 @@ export default function Panel() {
     }
     cargar().then((u) => {
       if (!u) return;
-      let guardada: string | null = null;
+      // ?pestana=creditos (por ejemplo, al volver de un pago) tiene prioridad.
+      let guardada: string | null = new URLSearchParams(window.location.search).get('pestana');
       try {
-        guardada = sessionStorage.getItem(CLAVE_PESTANA);
+        guardada ??= sessionStorage.getItem(CLAVE_PESTANA);
       } catch {
         /* sin almacenamiento */
       }
