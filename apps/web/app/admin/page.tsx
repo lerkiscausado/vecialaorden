@@ -12,7 +12,15 @@ import { ESTADO_PEDIDO, hace, minutos, num, pesos } from '@/lib/formato';
 interface Resumen {
   dias: number;
   usuarios: { clientes: number; maestros: number; nuevos: number; suspendidos: number };
-  maestros: { activos: number; verificados: number; pendientesVerificacion: number; sinUbicacionExacta: number; sinCreditos: number };
+  maestros: {
+    activos: number;
+    verificados: number;
+    pendientesVerificacion: number;
+    sinUbicacionExacta: number;
+    sinCreditos: number;
+    confianzaBaja: number;
+  };
+  calificaciones: { total: number; general: number | null; confianza: number | null };
   pedidos: {
     publicados: number;
     conCotizacion: number;
@@ -164,6 +172,14 @@ export default function PanelAdmin() {
                             {r.pedidos.cotizacionesPromedio} por pedido · 1.ª en {minutos(r.pedidos.minutosPrimeraCotizacion)}
                           </span>
                         </div>
+                        <div className="cifra cifra-confianza">
+                          <span className="cifra-etiqueta">Confianza promedio</span>
+                          <strong>{r.calificaciones.confianza !== null ? r.calificaciones.confianza.toFixed(1) : '—'}</strong>
+                          <span className="cifra-nota">
+                            {num(r.calificaciones.total)} calificaciones
+                            {r.calificaciones.general !== null ? ` · general ${r.calificaciones.general.toFixed(1)}` : ''}
+                          </span>
+                        </div>
                         <div className="cifra">
                           <span className="cifra-etiqueta">Ingresos</span>
                           <strong>{pesos(r.ingresos.total)}</strong>
@@ -193,6 +209,16 @@ export default function PanelAdmin() {
                               {r.maestros.pendientesVerificacion > 0 ? (
                                 <button type="button" className="enlace-boton" onClick={() => setPestana('maestros')}>
                                   {num(r.maestros.pendientesVerificacion)} — revisar
+                                </button>
+                              ) : (
+                                0
+                              )}
+                            </dd>
+                            <dt>Confianza baja</dt>
+                            <dd>
+                              {r.maestros.confianzaBaja > 0 ? (
+                                <button type="button" className="enlace-boton texto-alerta" onClick={() => setPestana('maestros')}>
+                                  {num(r.maestros.confianzaBaja)} — revisar
                                 </button>
                               ) : (
                                 0

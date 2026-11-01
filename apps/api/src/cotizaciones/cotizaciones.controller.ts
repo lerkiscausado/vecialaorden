@@ -2,8 +2,9 @@ import { Body, Controller, Get, HttpCode, NotFoundException, Param, Post, Query 
 import { Throttle } from '@nestjs/throttler';
 import { Roles, UsuarioActual, UsuarioJwt } from '../auth/decoradores';
 import { RolUsuario } from '../database/enums';
+import { CalificacionesService } from './calificaciones.service';
 import { CotizacionesService } from './cotizaciones.service';
-import { CotizarDto, ElegirDto, FiltroHistorialDto } from './dto';
+import { CalificarDto, CotizarDto, ElegirDto, FiltroHistorialDto } from './dto';
 
 /** Los códigos de pedido son 4 a 12 letras o números (se aceptan en minúscula). */
 function codigoValido(codigo: string): string {
@@ -16,7 +17,15 @@ function codigoValido(codigo: string): string {
 @Roles(RolUsuario.MAESTRO)
 @Controller('maestros/yo')
 export class MaestroCotizacionesController {
-  constructor(private readonly cotizaciones: CotizacionesService) {}
+  constructor(
+    private readonly cotizaciones: CotizacionesService,
+    private readonly calificaciones: CalificacionesService,
+  ) {}
+
+  @Get('calificaciones')
+  misCalificaciones(@UsuarioActual() u: UsuarioJwt) {
+    return this.calificaciones.delMaestro(u.id);
+  }
 
   @Get('trabajos')
   trabajos(@UsuarioActual() u: UsuarioJwt) {
@@ -39,7 +48,18 @@ export class MaestroCotizacionesController {
 /** Los pedidos del cliente (cualquier cuenta puede pedir un servicio). */
 @Controller('pedidos')
 export class PedidosController {
-  constructor(private readonly cotizaciones: CotizacionesService) {}
+  constructor(
+    private readonly cotizaciones: CotizacionesService,
+    private readonly calificaciones: CalificacionesService,
+  ) {}
+
+  @HttpCode(201)
+  @Post(':codigo/calificar')
+  async calificar(@UsuarioActual() u: UsuarioJwt, @Param('codigo') codigo: string, @Body() dto: CalificarDto) {
+    const c = codigoValido(codigo);
+    await this.calificaciones.calificar(u.id, c, dto);
+    return this.cotizaciones.detallePedido(u.id, c);
+  }
 
   @Get()
   misPedidos(@UsuarioActual() u: UsuarioJwt) {

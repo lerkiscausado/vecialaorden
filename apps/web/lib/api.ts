@@ -17,6 +17,8 @@ export interface Usuario {
     verificacion: string;
     saldoCreditos: number;
     calificacionPromedio: number;
+    confianzaPromedio: number;
+    totalResenas: number;
     radioKm: number;
     recibeAvisos: boolean;
     areas: { slug: string; nombre: string }[];

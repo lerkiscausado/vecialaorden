@@ -1,7 +1,8 @@
 /**
  * Orden recomendado de las cotizaciones para el cliente.
- * Puntaje de 0 a 100 = 30% calificación + 25% precio justo + 20% rapidez
- * + 15% cercanía + 10% experiencia.
+ * Puntaje de 0 a 100 = 30% calificación y confianza + 25% precio justo
+ * + 20% rapidez + 15% cercanía + 10% experiencia.
+ * Dentro del 30%, la confianza pesa la mitad.
  */
 export interface DatosRanking {
   cotizacionId: number;
@@ -9,6 +10,8 @@ export interface DatosRanking {
   minutosRespuesta: number;
   distanciaKm: number | null;
   calificacion: number;
+  /** Promedio del aspecto confianza (1 a 5). */
+  confianza: number;
   totalResenas: number;
   trabajosCompletados: number;
   aniosExperiencia: number;
@@ -20,6 +23,15 @@ export type EtiquetaPrecio = 'justo' | 'muy_bajo' | 'alto' | 'sin_referencia';
 export interface Rankeada extends DatosRanking {
   puntaje: number;
   etiquetaPrecio: EtiquetaPrecio;
+  confianzaBaja: boolean;
+}
+
+/** Con al menos esta cantidad de reseñas, una confianza menor a 3 se marca como alerta. */
+export const MINIMO_RESENAS_ALERTA = 3;
+export const UMBRAL_CONFIANZA_BAJA = 3;
+
+export function confianzaBaja(confianza: number, totalResenas: number): boolean {
+  return totalResenas >= MINIMO_RESENAS_ALERTA && confianza > 0 && confianza < UMBRAL_CONFIANZA_BAJA;
 }
 
 export const PESOS = { calificacion: 0.3, precio: 0.25, rapidez: 0.2, cercania: 0.15, experiencia: 0.1 };
@@ -62,7 +74,9 @@ export function rankear(items: DatosRanking[], referencia: { min: number; max: n
   return items
     .map((i) => {
       // Sin reseñas todavía: valor neutro, para no castigar a los maestros nuevos.
-      const sCalificacion = i.totalResenas > 0 ? Math.min(1, Math.max(0, (i.calificacion - 1) / 4)) : 0.6;
+      const escala = (v: number) => Math.min(1, Math.max(0, (v - 1) / 4));
+      const sCalificacion =
+        i.totalResenas > 0 ? 0.5 * escala(i.calificacion) + 0.5 * escala(i.confianza || i.calificacion) : 0.6;
       const sPrecio = centro > 0 ? Math.max(0, 1 - (Math.abs(i.precioTotal - centro) / centro) * 1.6) : 0.5;
       const sRapidez = maxT === minT ? 1 : 1 - (i.minutosRespuesta - minT) / (maxT - minT);
       const sCercania = i.distanciaKm === null ? 0.5 : 1 - i.distanciaKm / (maxD + 1);
@@ -75,7 +89,12 @@ export function rankear(items: DatosRanking[], referencia: { min: number; max: n
             PESOS.cercania * sCercania +
             PESOS.experiencia * sExperiencia),
       );
-      return { ...i, puntaje, etiquetaPrecio: etiquetarPrecio(i.precioTotal, referencia, precios) };
+      return {
+        ...i,
+        puntaje,
+        etiquetaPrecio: etiquetarPrecio(i.precioTotal, referencia, precios),
+        confianzaBaja: confianzaBaja(i.confianza, i.totalResenas),
+      };
     })
     .sort((a, b) => b.puntaje - a.puntaje || a.precioTotal - b.precioTotal);
 }

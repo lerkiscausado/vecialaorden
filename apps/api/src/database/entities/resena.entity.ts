@@ -8,10 +8,15 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { decimalANumero } from '../transformers';
 import { Solicitud } from './solicitud.entity';
 import { Usuario } from './usuario.entity';
 
-/** Calificación que deja el cliente al maestro al terminar el trabajo. */
+/**
+ * Calificación que deja el cliente al maestro al terminar el trabajo.
+ * Cada aspecto va de 1 a 5. La confianza se muestra aparte porque es lo
+ * que más pesa cuando alguien deja entrar a un maestro a su casa.
+ */
 @Entity('resenas')
 @Index('idx_resenas_maestro', ['maestroId', 'creadoEn'])
 export class Resena {
@@ -40,8 +45,23 @@ export class Resena {
   @JoinColumn({ name: 'maestroId' })
   maestro: Usuario;
 
-  /** De 1 a 5. */
+  /** Honestidad, respeto por la casa, sensación de seguridad. */
   @Column({ type: 'tinyint', unsigned: true })
+  confianza: number;
+
+  /** Calidad del trabajo terminado. */
+  @Column({ type: 'tinyint', unsigned: true })
+  calidad: number;
+
+  @Column({ type: 'tinyint', unsigned: true })
+  puntualidad: number;
+
+  /** Respetó el precio y lo acordado. */
+  @Column({ type: 'tinyint', unsigned: true })
+  cumplimiento: number;
+
+  /** Promedio de los cuatro aspectos (1.00 a 5.00). */
+  @Column({ type: 'decimal', precision: 3, scale: 2, transformer: decimalANumero })
   calificacion: number;
 
   @Column({ type: 'text', nullable: true })

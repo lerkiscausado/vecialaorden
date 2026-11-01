@@ -44,6 +44,10 @@ export class PerfilMaestro {
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0, transformer: decimalANumero })
   calificacionPromedio: number;
 
+  /** Promedio del aspecto "confianza" de las reseñas (0 si no tiene). */
+  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0, transformer: decimalANumero })
+  confianzaPromedio: number;
+
   @Column({ type: 'int', unsigned: true, default: 0 })
   totalResenas: number;
 
