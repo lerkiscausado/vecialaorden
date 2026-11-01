@@ -10,7 +10,7 @@ import { MisCotizaciones } from '@/components/maestro/MisCotizaciones';
 import { MisCreditos } from '@/components/maestro/MisCreditos';
 import { TrabajosDisponibles } from '@/components/maestro/TrabajosDisponibles';
 import { ZonaTrabajo } from '@/components/ZonaTrabajo';
-import { api, borrarToken, ErrorApi, leerToken, Usuario } from '@/lib/api';
+import { api, borrarSesion, cerrarSesion, ErrorApi, haySesion, Usuario } from '@/lib/api';
 
 type Pestana = 'trabajos' | 'cotizaciones' | 'calificaciones' | 'creditos' | 'cuenta' | 'pedidos';
 
@@ -35,7 +35,7 @@ export default function Panel() {
       return u;
     } catch (err) {
       if (err instanceof ErrorApi && err.estado === 401) {
-        borrarToken();
+        borrarSesion();
         router.replace('/ingresar?volver=/panel');
       } else {
         setError(err instanceof ErrorApi ? err.message : 'No pudimos cargar tu cuenta.');
@@ -45,7 +45,7 @@ export default function Panel() {
   }, [router]);
 
   useEffect(() => {
-    if (!leerToken()) {
+    if (!haySesion()) {
       router.replace('/ingresar?volver=/panel');
       return;
     }
@@ -74,8 +74,18 @@ export default function Panel() {
     }
   }
 
-  function salir() {
-    borrarToken();
+  async function salir() {
+    await cerrarSesion();
+    router.push('/');
+  }
+
+  async function salirDeTodo() {
+    try {
+      await api('/auth/salir-todo', { cuerpo: {} });
+    } catch {
+      /* si falla, al menos se cierra aquí */
+    }
+    await cerrarSesion();
     router.push('/');
   }
 
@@ -192,6 +202,9 @@ export default function Panel() {
                         )}
                         <button type="button" className="boton boton-secundario" onClick={salir}>
                           Cerrar sesión
+                        </button>
+                        <button type="button" className="enlace-boton" onClick={salirDeTodo}>
+                          Cerrar sesión en todos mis dispositivos
                         </button>
                       </div>
                     </section>

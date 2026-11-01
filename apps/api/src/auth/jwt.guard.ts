@@ -17,8 +17,8 @@ import { ES_PUBLICO, ROLES, UsuarioJwt } from './decoradores';
  * Guard global: toda ruta exige un JWT válido en "Authorization: Bearer <token>"
  * salvo las marcadas con @Publico(). También aplica @Roles().
  *
- * PENDIENTE: hoy solo hay token de acceso. Más adelante pasar a
- * access token corto + refresh token en cookie httpOnly.
+ * El token de acceso dura poco (15 min); la web lo renueva con la cookie
+ * httpOnly de /auth/renovar (ver SesionesService).
  */
 @Injectable()
 export class JwtGuard implements CanActivate {

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { Encabezado, Pie } from '@/components/Encabezado';
 import { VerificarCodigo } from '@/components/VerificarCodigo';
-import { api, ErrorApi, guardarToken, Sesion } from '@/lib/api';
+import { api, ErrorApi, guardarSesion, Sesion } from '@/lib/api';
 
 type Modo = 'codigo' | 'password';
 
@@ -59,7 +59,7 @@ function FormularioIngreso() {
       const sesion = await api<Sesion>('/auth/login', {
         cuerpo: { usuario: String(f.get('usuario') ?? ''), password: String(f.get('password') ?? '') },
       });
-      guardarToken(sesion.token);
+      guardarSesion(sesion.token);
       router.push(destino);
     } catch (err) {
       setError(err instanceof ErrorApi ? err.message : 'Algo salió mal. Intenta de nuevo.');

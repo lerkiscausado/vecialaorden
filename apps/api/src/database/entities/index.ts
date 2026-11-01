@@ -14,6 +14,7 @@ import { PaqueteCredito } from './paquete-credito.entity';
 import { PerfilMaestro } from './perfil-maestro.entity';
 import { RegistroIa } from './registro-ia.entity';
 import { Resena } from './resena.entity';
+import { Sesion } from './sesion.entity';
 import { Solicitud } from './solicitud.entity';
 import { Usuario } from './usuario.entity';
 
@@ -34,6 +35,7 @@ export {
   PerfilMaestro,
   RegistroIa,
   Resena,
+  Sesion,
   Solicitud,
   Usuario,
 };
@@ -55,6 +57,7 @@ export const ENTIDADES = [
   PerfilMaestro,
   RegistroIa,
   Resena,
+  Sesion,
   Solicitud,
   Usuario,
 ];

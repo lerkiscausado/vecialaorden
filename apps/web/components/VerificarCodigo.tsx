@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { api, ErrorApi, guardarToken, Sesion } from '@/lib/api';
+import { api, ErrorApi, guardarSesion, Sesion } from '@/lib/api';
 
 interface Props {
   celular: string;
@@ -23,7 +23,7 @@ export function VerificarCodigo({ celular, mensaje, onSesion, onCambiarNumero }:
     setCargando(true);
     try {
       const sesion = await api<Sesion>('/auth/codigo/verificar', { cuerpo: { celular, codigo } });
-      guardarToken(sesion.token);
+      guardarSesion(sesion.token);
       onSesion(sesion);
     } catch (err) {
       setError(err instanceof ErrorApi ? err.message : 'Algo salió mal. Intenta de nuevo.');

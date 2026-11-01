@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { InjectDataSource } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
 import { DataSource } from 'typeorm';
+import { SesionesService } from '../auth/sesiones.service';
 import { CreditosService } from '../creditos/creditos.service';
 import { PerfilMaestro, Usuario } from '../database/entities';
 import {
@@ -24,6 +25,7 @@ export class AdminService {
   constructor(
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly creditos: CreditosService,
+    private readonly sesiones: SesionesService,
   ) {}
 
   private q<T = any>(sql: string, params: unknown[] = []): Promise<T[]> {
@@ -299,6 +301,8 @@ export class AdminService {
     if (!usuario) throw new NotFoundException('La cuenta no existe.');
     if (usuario.rol === RolUsuario.SUPERADMIN) throw new ForbiddenException('No se puede suspender a un superadministrador.');
     await usuarios.update(usuarioId, { estado });
+    // Al suspender se cierran todas sus sesiones (no podrá renovar el token).
+    if (estado !== EstadoUsuario.ACTIVO) await this.sesiones.cerrarTodas(usuarioId);
     return { id: usuarioId, estado };
   }
 

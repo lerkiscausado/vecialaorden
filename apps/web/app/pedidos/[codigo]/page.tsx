@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { FormularioCalificacion, MiCalificacion, ResumenCalificacion } from '@/components/cliente/FormularioCalificacion';
 import { Encabezado, Pie } from '@/components/Encabezado';
-import { api, borrarToken, ErrorApi, leerToken } from '@/lib/api';
+import { api, borrarSesion, ErrorApi, haySesion } from '@/lib/api';
 import { ESTADO_PEDIDO, minutos, pesos } from '@/lib/formato';
 
 interface Cotizacion {
@@ -83,14 +83,14 @@ export default function PaginaPedido() {
       setPedido(await api<Pedido>(`/pedidos/${encodeURIComponent(codigo)}`));
     } catch (err) {
       if (err instanceof ErrorApi && err.estado === 401) {
-        borrarToken();
+        borrarSesion();
         router.replace(volverAqui);
       } else setError(err instanceof ErrorApi ? err.message : 'No pudimos cargar el pedido.');
     }
   }, [codigo, router, volverAqui]);
 
   useEffect(() => {
-    if (!leerToken()) {
+    if (!haySesion()) {
       router.replace(volverAqui);
       return;
     }

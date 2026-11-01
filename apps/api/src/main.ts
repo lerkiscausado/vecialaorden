@@ -1,16 +1,23 @@
 import 'reflect-metadata';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Detrás de un proxy (Railway, Render, Nginx…) para leer la IP real del visitante.
+  // Sin esto, el límite de peticiones contaría a todos como un mismo visitante.
+  const proxy = process.env.TRUST_PROXY?.trim();
+  if (proxy) app.set('trust proxy', /^\d+$/.test(proxy) ? Number(proxy) : proxy === 'true' ? true : proxy);
 
   const origenes = (process.env.WEB_ORIGIN ?? 'http://localhost:3000')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
-  app.enableCors({ origin: origenes });
+  // credentials: la cookie de renovación viaja entre la web y el API.
+  app.enableCors({ origin: origenes, credentials: true });
 
   app.useGlobalPipes(
     new ValidationPipe({

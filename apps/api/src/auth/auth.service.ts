@@ -225,6 +225,13 @@ export class AuthService {
     return { token, usuario };
   }
 
+  /** Token de acceso corto (JWT_EXPIRES_IN, 15 min por defecto). */
+  async tokenDeAcceso(usuarioId: number): Promise<string> {
+    const u = await this.dataSource.getRepository(Usuario).findOne({ where: { id: usuarioId }, select: { id: true, rol: true } });
+    if (!u) throw new UnauthorizedException('Tu sesión ya no es válida. Vuelve a iniciar sesión.');
+    return this.jwt.signAsync({ sub: u.id, rol: u.rol });
+  }
+
   private async darCreditosDeBienvenida(usuario: Usuario): Promise<void> {
     if (usuario.rol !== RolUsuario.MAESTRO) return;
     const cantidad = Number(this.config.get('CREDITOS_BIENVENIDA', 10));
