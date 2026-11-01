@@ -153,6 +153,30 @@ WhatsApp al elegir). Califica de 1 a 5 estrellas cuatro aspectos, con la **confi
 - Al calificar, el pedido pasa a *Terminado*, sube el contador de trabajos del maestro y se le avisa.
 - El maestro ve todo en la pestaña **Calificaciones** de su panel.
 
+## Compra de créditos (Wompi)
+
+El maestro compra paquetes en la pestaña **Créditos** de su panel y paga en el checkout de Wompi
+(Nequi, PSE, tarjeta o botón Bancolombia).
+
+1. En el panel de Wompi > *Desarrolladores* copia la llave pública, el secreto de integridad y el
+   secreto de eventos, y ponlos en `WOMPI_PUBLIC_KEY`, `WOMPI_INTEGRITY_SECRET` y `WOMPI_EVENTS_SECRET`.
+   Con las llaves de prueba (`pub_test_…`) no se cobra dinero real.
+2. Registra la **URL de eventos**: `https://TU-API/pagos/wompi/eventos`.
+3. `WEB_PUBLIC_URL` debe ser la dirección pública de la web: ahí vuelve el maestro después de pagar
+   (`/pagos/resultado`).
+
+Cómo funciona:
+
+- `POST /pagos` crea un pago *pendiente* con una referencia única y devuelve la URL del checkout,
+  firmada con el secreto de integridad (el precio no se puede alterar desde el navegador).
+- Wompi avisa a `/pagos/wompi/eventos`; se valida el checksum con el secreto de eventos y que el monto
+  coincida con el del paquete. Si el monto no coincide, el pago queda *con error* y no se suman créditos.
+- Al volver del checkout, la web llama a `/pagos/confirmar`, que consulta la transacción en Wompi por si
+  el aviso todavía no ha llegado.
+- Los créditos se suman una sola vez aunque el aviso llegue repetido (libro de créditos con referencia
+  única) y el maestro recibe un WhatsApp de confirmación.
+- Si faltan las llaves, la compra en línea queda desactivada y el panel lo indica.
+
 ## Panel administrativo (solo superadmin)
 
 `/admin`, con tres pestañas:
@@ -246,6 +270,10 @@ Reglas del esquema:
 | POST | `/pedidos/:codigo/elegir` | con token | Elegir maestro |
 | POST | `/pedidos/:codigo/calificar` | con token | Calificar al maestro (4 aspectos) y terminar el pedido |
 | GET | `/maestros/yo/calificaciones` | maestro | Promedios por aspecto y comentarios |
+| GET | `/pagos` | maestro | Compras y si la compra en línea está activa |
+| POST | `/pagos` | maestro | Iniciar compra de un paquete (devuelve la URL de Wompi) |
+| POST | `/pagos/confirmar` | maestro | Estado del pago al volver del checkout |
+| POST | `/pagos/wompi/eventos` | público (firma Wompi) | Avisos de Wompi |
 | GET | `/admin/resumen?dias=30` | superadmin | Cifras del tablero |
 | GET | `/admin/maestros` · `/admin/pedidos` | superadmin | Listados con filtros |
 | PATCH | `/admin/maestros/:id/verificacion` | superadmin | Verificar o rechazar |
@@ -262,6 +290,8 @@ El token va en el encabezado `Authorization: Bearer <token>`.
 - **WhatsApp real:** conectar el webhook de Meta a `ConversacionService`. Los avisos (`MensajeriaService`)
   ya se envían si WhatsApp está configurado, pero fuera de la ventana de 24 horas Meta exige plantillas aprobadas.
 - **Recordatorio de calificación:** escribirle al cliente unos días después de elegir si aún no ha calificado.
+- **Dependencias:** quedan avisos de seguridad que exigen cambio de versión mayor (NestJS 12 y TypeORM 1.x);
+  planear la actualización antes de lanzar.
 - **Política de datos:** `/privacidad` es un borrador; el texto final debe revisarlo un abogado.
 - **Precios de referencia:** las columnas `precioRefMin` y `precioRefMax` de `areas` están vacías
   hasta tener datos reales.
@@ -271,4 +301,5 @@ El token va en el encabezado `Authorization: Bearer <token>`.
 1. ✅ Base: monorepo, migraciones, autenticación, inicio, registro, panel y configuración de IA.
 2. ✅ Cerebro del bot + análisis con IA + ciudades + zona del maestro + simulador. (Falta conectar el webhook de Meta.)
 3. ✅ Cotizaciones con 5 cupos, elección del cliente, panel del maestro por pestañas y panel administrativo.
-4. Compra de créditos con Wompi.
+4. ✅ Calificaciones por aspectos con la confianza destacada.
+5. ✅ Compra de créditos con Wompi.

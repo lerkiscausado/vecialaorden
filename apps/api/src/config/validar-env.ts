@@ -27,5 +27,15 @@ export function validarEnv(env: Record<string, unknown>): Record<string, unknown
     throw new Error(`${inseguras.join(', ')} deben ser valores aleatorios de al menos 32 caracteres.`);
   }
 
+  // Wompi: o las tres llaves, o ninguna (compra en línea desactivada).
+  const wompi = ['WOMPI_PUBLIC_KEY', 'WOMPI_INTEGRITY_SECRET', 'WOMPI_EVENTS_SECRET'];
+  const conValor = wompi.filter((clave) => String(env[clave] ?? '').trim() !== '');
+  if (conValor.length && conValor.length < wompi.length) {
+    throw new Error(`Para Wompi faltan: ${wompi.filter((c) => !conValor.includes(c)).join(', ')}.`);
+  }
+  if (conValor.length && !/^pub_(test|prod)_/.test(String(env.WOMPI_PUBLIC_KEY).trim())) {
+    throw new Error('WOMPI_PUBLIC_KEY debe empezar por pub_test_ o pub_prod_.');
+  }
+
   return env;
 }
