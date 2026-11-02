@@ -223,6 +223,7 @@ Las migraciones están en `apps/api/src/database/migrations`:
 | `Ciudades` | Tablas `ciudades` y `conversaciones`; ciudad en barrios, usuarios y solicitudes |
 | `DatosCiudades` | 8 ciudades (Bogotá y Cartagena activas) |
 | `CalificacionConfianza` | Calificación por aspectos (confianza, calidad, puntualidad, cumplimiento) y promedio de confianza |
+| `Sesiones` | Tabla `sesiones` para los tokens de renovación |
 
 ```bash
 npm run migration:run       # aplica las pendientes
@@ -250,6 +251,9 @@ Reglas del esquema:
 | POST | `/auth/codigo/verificar` | público | Verifica el código y entrega el token |
 | POST | `/auth/login` | público | Entra con correo o celular + contraseña |
 | GET | `/auth/yo` | con token | Datos de la cuenta |
+| POST | `/auth/renovar` | cookie | Token de acceso nuevo (rota la cookie de renovación) |
+| POST | `/auth/salir` | cookie | Cierra la sesión de este dispositivo |
+| POST | `/auth/salir-todo` | con token | Cierra la sesión en todos los dispositivos |
 | GET | `/creditos/movimientos` | maestro | Historial de créditos |
 | GET | `/admin/ia/configuraciones` | superadmin | Conexiones de IA (claves enmascaradas) |
 | POST | `/admin/ia/configuraciones` | superadmin | Agregar conexión |
@@ -282,10 +286,21 @@ Reglas del esquema:
 
 El token va en el encabezado `Authorization: Bearer <token>`.
 
+### Sesión
+
+- **Token de acceso** (JWT, 15 min): solo en memoria de la web, nunca en `localStorage`.
+- **Token de renovación** (30 días): cookie `httpOnly` `veci_renovacion`, solo para `/auth`. En la base se
+  guarda solo su hash (tabla `sesiones`).
+- Cada renovación entrega una cookie nueva (rotación). Si alguien reutiliza una vieja, se cierra la
+  sesión completa de ese dispositivo (señal de robo). Hay un margen de 20 s para dos pestañas que
+  renuevan al tiempo; además la web usa un candado entre pestañas.
+- Las rutas que usan la cookie exigen el encabezado `X-Veci: 1` (protección CSRF).
+- Suspender una cuenta cierra todas sus sesiones.
+- En producción: HTTPS (`COOKIE_SECURE=true`), el API en un subdominio de la web
+  (ej. `api.vecialaorden.com`) y `TRUST_PROXY=1` si hay un proxy delante.
+
 ## Pendientes conocidos
 
-- **Seguridad de sesión:** hoy se usa solo un token de acceso (7 días) guardado en el navegador.
-  Pasar a token de acceso corto + token de renovación en cookie `httpOnly`.
 - **Barrios:** importar los barrios de Bogotá y Cartagena (ver "Ciudades y barrios").
 - **WhatsApp real:** conectar el webhook de Meta a `ConversacionService`. Los avisos (`MensajeriaService`)
   ya se envían si WhatsApp está configurado, pero fuera de la ventana de 24 horas Meta exige plantillas aprobadas.
@@ -303,3 +318,4 @@ El token va en el encabezado `Authorization: Bearer <token>`.
 3. ✅ Cotizaciones con 5 cupos, elección del cliente, panel del maestro por pestañas y panel administrativo.
 4. ✅ Calificaciones por aspectos con la confianza destacada.
 5. ✅ Compra de créditos con Wompi.
+6. ✅ Sesión con token de acceso corto + renovación en cookie httpOnly.

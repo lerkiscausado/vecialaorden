@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Encabezado, Pie } from '@/components/Encabezado';
-import { api, borrarToken, ErrorApi, leerToken } from '@/lib/api';
+import { api, borrarSesion, ErrorApi, haySesion } from '@/lib/api';
 import { pesos } from '@/lib/formato';
 
 interface Pago {
@@ -53,7 +53,7 @@ export default function ResultadoPago() {
     const referencia = q.get('ref') ?? '';
     const transaccionId = q.get('id') ?? undefined;
     const volver = `/ingresar?volver=${encodeURIComponent(`/pagos/resultado?${q}`)}`;
-    if (!leerToken()) {
+    if (!haySesion()) {
       router.replace(volver);
       return;
     }
@@ -73,7 +73,7 @@ export default function ResultadoPago() {
       } catch (err) {
         if (!vivo) return;
         if (err instanceof ErrorApi && err.estado === 401) {
-          borrarToken();
+          borrarSesion();
           router.replace(volver);
         } else setError(err instanceof ErrorApi ? err.message : 'No pudimos consultar tu pago.');
       }

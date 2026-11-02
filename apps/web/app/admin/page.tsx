@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { GraficoBarras } from '@/components/admin/GraficoBarras';
 import { MaestrosAdmin } from '@/components/admin/MaestrosAdmin';
 import { Encabezado, Pie } from '@/components/Encabezado';
-import { api, borrarToken, Ciudad, ErrorApi, leerToken, Usuario } from '@/lib/api';
+import { api, borrarSesion, Ciudad, ErrorApi, haySesion, Usuario } from '@/lib/api';
 import { ESTADO_PEDIDO, hace, minutos, num, pesos } from '@/lib/formato';
 
 interface Resumen {
@@ -70,7 +70,7 @@ export default function PanelAdmin() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!leerToken()) {
+    if (!haySesion()) {
       router.replace('/ingresar?volver=/admin');
       return;
     }
@@ -78,7 +78,7 @@ export default function PanelAdmin() {
       .then((u) => setAutorizado(u.rol === 'superadmin'))
       .catch((err) => {
         if (err instanceof ErrorApi && err.estado === 401) {
-          borrarToken();
+          borrarSesion();
           router.replace('/ingresar?volver=/admin');
         } else setAutorizado(false);
       });
@@ -176,14 +176,14 @@ export default function PanelAdmin() {
                           <span className="cifra-etiqueta">Confianza promedio</span>
                           <strong>{r.calificaciones.confianza !== null ? r.calificaciones.confianza.toFixed(1) : '—'}</strong>
                           <span className="cifra-nota">
-                            {num(r.calificaciones.total)} calificaciones
+                            {r.calificaciones.total === 1 ? '1 calificación' : `${num(r.calificaciones.total)} calificaciones`}
                             {r.calificaciones.general !== null ? ` · general ${r.calificaciones.general.toFixed(1)}` : ''}
                           </span>
                         </div>
                         <div className="cifra">
                           <span className="cifra-etiqueta">Ingresos</span>
                           <strong>{pesos(r.ingresos.total)}</strong>
-                          <span className="cifra-nota">{num(r.ingresos.pagos)} compras de créditos</span>
+                          <span className="cifra-nota">{r.ingresos.pagos === 1 ? '1 compra de créditos' : `${num(r.ingresos.pagos)} compras de créditos`}</span>
                         </div>
                       </div>
 

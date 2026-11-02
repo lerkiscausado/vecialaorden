@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Encabezado, Pie } from '@/components/Encabezado';
-import { api, borrarToken, ErrorApi, leerToken, Usuario } from '@/lib/api';
+import { api, borrarSesion, ErrorApi, haySesion, Usuario } from '@/lib/api';
 
 type Proveedor = 'anthropic' | 'openai' | 'gemini' | 'openai_compatible';
 type Proposito = 'analisis_solicitudes' | 'general';
@@ -109,7 +109,7 @@ export default function AdminIa() {
   }, []);
 
   useEffect(() => {
-    if (!leerToken()) {
+    if (!haySesion()) {
       router.replace('/ingresar');
       return;
     }
@@ -124,7 +124,7 @@ export default function AdminIa() {
       })
       .catch((err) => {
         if (err instanceof ErrorApi && err.estado === 401) {
-          borrarToken();
+          borrarSesion();
           router.replace('/ingresar');
         } else {
           setAviso({ tipo: 'error', texto: err instanceof ErrorApi ? err.message : 'No pudimos cargar la página.' });

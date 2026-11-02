@@ -10,6 +10,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtGuard } from './jwt.guard';
 import { OtpService } from './otp.service';
+import { SesionesService } from './sesiones.service';
 
 @Module({
   imports: [
@@ -19,14 +20,14 @@ import { OtpService } from './otp.service';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_SECRET'),
-        signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '7d') },
+        signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '15m') },
       }),
     }),
     WhatsappModule,
     CreditosModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, OtpService, { provide: APP_GUARD, useClass: JwtGuard }],
-  exports: [AuthService],
+  providers: [AuthService, OtpService, SesionesService, { provide: APP_GUARD, useClass: JwtGuard }],
+  exports: [AuthService, SesionesService],
 })
 export class AuthModule {}
