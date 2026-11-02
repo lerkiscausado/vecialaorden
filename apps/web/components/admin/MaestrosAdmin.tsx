@@ -124,7 +124,7 @@ export function MaestrosAdmin({ ciudades }: { ciudades: Ciudad[] }) {
                 <span>{m.oficios || 'Sin oficios'}</span>
                 <span>{m.aniosExperiencia} años</span>
                 <span>
-                  {m.cotizaciones} cotizaciones · {m.elegidas} elegidas
+                  {m.cotizaciones} {m.cotizaciones === 1 ? 'cotización' : 'cotizaciones'} · {m.elegidas} {m.elegidas === 1 ? 'elegida' : 'elegidas'}
                 </span>
                 <span>
                   {m.totalResenas ? (

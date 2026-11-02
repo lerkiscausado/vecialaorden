@@ -176,14 +176,14 @@ export default function PanelAdmin() {
                           <span className="cifra-etiqueta">Confianza promedio</span>
                           <strong>{r.calificaciones.confianza !== null ? r.calificaciones.confianza.toFixed(1) : '—'}</strong>
                           <span className="cifra-nota">
-                            {num(r.calificaciones.total)} calificaciones
+                            {r.calificaciones.total === 1 ? '1 calificación' : `${num(r.calificaciones.total)} calificaciones`}
                             {r.calificaciones.general !== null ? ` · general ${r.calificaciones.general.toFixed(1)}` : ''}
                           </span>
                         </div>
                         <div className="cifra">
                           <span className="cifra-etiqueta">Ingresos</span>
                           <strong>{pesos(r.ingresos.total)}</strong>
-                          <span className="cifra-nota">{num(r.ingresos.pagos)} compras de créditos</span>
+                          <span className="cifra-nota">{r.ingresos.pagos === 1 ? '1 compra de créditos' : `${num(r.ingresos.pagos)} compras de créditos`}</span>
                         </div>
                       </div>
 

@@ -24,7 +24,8 @@ export function minutos(m: number | null): string {
   if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h} h ${m % 60 ? `${m % 60} min` : ''}`.trim();
-  return `${Math.round(h / 24)} días`;
+  const d = Math.round(h / 24);
+  return `${d} ${d === 1 ? 'día' : 'días'}`;
 }
 
 export const ESTADO_PEDIDO: Record<string, string> = {
@@ -43,3 +44,4 @@ export const ESTADO_COTIZACION: Record<string, string> = {
   descartada: 'No elegida',
   retirada: 'Retirada',
 };
+

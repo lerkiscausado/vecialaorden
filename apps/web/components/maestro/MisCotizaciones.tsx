@@ -72,7 +72,7 @@ export function MisCotizaciones() {
         <div className="cifra">
           <span className="cifra-etiqueta">Trabajos ganados</span>
           <strong>{pesos(r.valorGanado)}</strong>
-          <span className="cifra-nota">{r.creditosGastados} créditos usados</span>
+          <span className="cifra-nota">{r.creditosGastados} {r.creditosGastados === 1 ? 'crédito usado' : 'créditos usados'}</span>
         </div>
       </div>
 

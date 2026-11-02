@@ -236,7 +236,7 @@ export default function PaginaPedido() {
                             )}
                             {precio && <span className={`pastilla ${precio.clase}`}>{precio.texto}</span>}
                             {c.fechaDisponible && <span className="chip">Puede empezar el {c.fechaDisponible}</span>}
-                            {c.duracionDias && <span className="chip">{c.duracionDias} días de trabajo</span>}
+                            {c.duracionDias && <span className="chip">{c.duracionDias} {c.duracionDias === 1 ? 'día' : 'días'} de trabajo</span>}
                             {c.estado !== 'enviada' && (
                               <span className={`pastilla pastilla-${c.estado}`}>{c.estado === 'elegida' ? 'Elegida' : 'No elegida'}</span>
                             )}
